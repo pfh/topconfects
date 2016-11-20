@@ -1,2 +1,4 @@
-# confects
-(Under development) CONfident efFECT Sizes, turn your data into a tasty treat for your degustation.
+# topconfects
+(Under development) TOP results by CONfident efFECT Size, find the tastiest treats in your data for your degustation.
+
+

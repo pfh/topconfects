@@ -1,0 +1,12 @@
+Package: topconfects
+Title: Top Results by Confident Effect Size
+Version: 0.0.0.9000
+Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
+Description: Uses limma's treat or edgeR's glmTreat to rank genes (or other
+    features) by effect size.
+Depends:
+    R (>= 3.3.0)
+License: LGPL-2.1 | file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1
