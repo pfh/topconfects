@@ -1,13 +1,15 @@
 ---
-title: "Confident size of fold change"
+title: "Confident fold change"
 author: "Paul Harrison"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Confident size of fold change}
+  %\VignetteIndexEntry{Confident fold change}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+Load a dataset. This RNA-seq data investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
 
 ```{r}
 library(topconfects)
@@ -16,29 +18,99 @@ library(NBPSeq)
 library(edgeR)
 library(limma)
 library(dplyr)
+library(ggplot2)
 
 data(arab)
-head(arab)
-dim(arab)
 
 Treat <- factor(substring(colnames(arab),1,4)) %>% relevel(ref="mock")
 Time <- factor(substring(colnames(arab),5,5))
 y <- DGEList(arab)
-keep <- rowSums(cpm(y)>2) >= 3
-table(keep)
-y <- y[keep, , keep.lib.sizes=FALSE]
-y <- calcNormFactors(y)
-y$samples
 
+# Keep genes with at least 3 samples having an RPM of more than 2
+keep <- rowSums(cpm(y)>2) >= 3
+y <- y[keep,,keep.lib.sizes=FALSE]
+y <- calcNormFactors(y)
+```
+
+
+## limma analysis
+
+Standard `limma` analysis steps.
+
+```{r}
 design <- model.matrix(~Time+Treat)
 
 fit <-
-    voom(y, design, plot=TRUE) %>%
-    lmFit(design) %>%
+    voom(y, design) %>%
+    lmFit(design)
+
+cfit <- 
+    contrasts.fit(fit, coefficients=ncol(design)) %>% 
     eBayes()
-
-cfit <- contrasts.fit(fit, coefficients=4)
-
-confects <- limma_confects(cfit)
-
 ```
+
+Find largest fold changes that we can be confident of at FDR 0.05.
+
+```{r}
+confects <- limma_confects(cfit, fdr=0.05)
+head(confects)
+```
+
+Genes that are not even different from zero effect size at the chosen FDR are given a `confect` of NA. We would have found 2184 genes using a traditional `limma::topTable` analysis with FDR=0.05.
+
+```{r}
+table(is.na(confects$confect))
+```
+
+Here the usual `logFC` values estimated by `limma` as shown as dots, with lines to the `signed_confect` value.
+
+```{r fig.height=8}
+tc <- head(confects, 50) %>% mutate(name=factor(name,rev(name)))
+ggplot(tc, aes(y=name, x=logFC)) +
+    geom_vline(xintercept=0) +
+    geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
+    geom_point()
+```
+
+If we had gone by `adj.P.Val` we would have seen something rather different.
+
+```{r, fig.height=8}
+tt <- topTable(cfit, n=Inf)
+tt$name <- rownames(tt) %>% factor(.,rev(.))
+ggplot(head(tt, 50), aes(y=name, x=logFC)) + geom_vline(xintercept=0) + geom_point() 
+```
+
+```{r}
+plotMD(cfit, status=paste0(
+    ifelse(rownames(cfit) %in% tt$name[1:20], "l",""),
+    ifelse(rownames(cfit) %in% confects$name[1:20], "cl", "")))
+```
+
+Note the `confects` results above are the same as would be obtained using `limma::treat(cfit, lfc=1.55)`.
+
+```{r}
+confects$confect[50]
+```
+
+
+## edgeR analysis
+
+```{r}
+y <- estimateDisp(y, design, robust=TRUE)
+y$common.dispersion
+plotBCV(y)
+
+efit <- glmQLFit(y, design, robust=TRUE)
+
+econfects <- edger_confects(edger_fit, coef=4, fdr=0.05)
+
+qlf <- glmQLFTest(efit, coef=4)
+qlf_tt <- topTags(qlf, n=Inf)
+
+plotMD(efit, legend="bottomleft", status=paste(
+    #ifelse(rownames(cfit) %in% tt$name, "top50-topTable",""),
+    #ifelse(rownames(cfit) %in% confects$name[1:100], "lc", ""),
+    ifelse(rownames(cfit) %in% econfects$name[1:5], "ec", ""),
+    ifelse(rownames(cfit) %in% rownames(qlf_tt)[1:5], "e","")))
+```
+

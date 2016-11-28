@@ -1,5 +1,7 @@
 
 
+#' Find sets of discoveries for a range of effect sizes, controlling FDR.
+#'
 #' Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate for each set.
 #'
 #' @param n Number of items being tested.
@@ -11,6 +13,20 @@
 #' @param max Maximum effect size to test for.
 #'
 #' @param step Granularity of effect sizes to test.
+#'
+#' @return A data frame with the following columns:
+#'
+#' \itemize{
+#'     \item \code{rank} - Ranking by \code{confect} and for equal \code{confect} by p-value at that effect size.
+#'     \item \code{index} - Number of the test, between 1 and n.
+#'     \item \code{confect} - CONfident efFECT size.
+#' }
+#'
+#' The usage is as follows: To find a set of tests which have effect size at least \code{x} with the specified FDR, take the rows with \code{confect >= x}.
+#'
+#' Some tests may have been given the same \code{confect}. To maintain the FDR, all or none should be chosen.
+#'
+#' With this caveat understood, one may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible.
 #'
 #' @export
 nest_confects <- function(n, pfunc, fdr=0.01, max=30.0, step=0.05) {

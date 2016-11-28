@@ -2,14 +2,23 @@
 % Please edit documentation in R/limma.R
 \name{limma_confects}
 \alias{limma_confects}
-\title{Effect size magnitude for limma TREAT}
+\title{Confident log2 fold changes using limma's TREAT}
 \usage{
 limma_confects(fit, fdr = 0.05, max = 30, step = 0.05)
 }
 \arguments{
 \item{fit}{A limma MArrayLM object with one coefficient. (Use limma::contrasts.fit reduce the fit object down to the contrast or coefficient that you are interested in.)}
+
+\item{fdr}{False Discovery Rate to control for.}
+
+\item{max}{Maximum log2 fold change to test for.}
+
+\item{step}{Granularity of log2 fold changes to test.}
+}
+\value{
+See \code{\link{nest_confects}} for details of how to interpret the result.
 }
 \description{
-Effect size magnitude for limma TREAT
+For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 }
 
