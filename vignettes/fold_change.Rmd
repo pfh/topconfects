@@ -1,0 +1,44 @@
+---
+title: "Confident size of fold change"
+author: "Paul Harrison"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Confident size of fold change}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+library(topconfects)
+
+library(NBPSeq)
+library(edgeR)
+library(limma)
+library(dplyr)
+
+data(arab)
+head(arab)
+dim(arab)
+
+Treat <- factor(substring(colnames(arab),1,4)) %>% relevel(ref="mock")
+Time <- factor(substring(colnames(arab),5,5))
+y <- DGEList(arab)
+keep <- rowSums(cpm(y)>2) >= 3
+table(keep)
+y <- y[keep, , keep.lib.sizes=FALSE]
+y <- calcNormFactors(y)
+y$samples
+
+design <- model.matrix(~Time+Treat)
+
+fit <-
+    voom(y, design, plot=TRUE) %>%
+    lmFit(design) %>%
+    eBayes()
+
+cfit <- contrasts.fit(fit, coefficients=4)
+
+confects <- limma_confects(cfit)
+
+```
