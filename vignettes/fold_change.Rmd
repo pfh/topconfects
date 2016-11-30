@@ -93,7 +93,7 @@ ggplot(head(top, 50), aes(y=name, x=logFC)) +
     geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
 ```
 
-An MD-plot highlighting the positions of the top 20 genes in both rankings illustrate this.
+An MD-plot highlighting the positions of the top 20 genes in both rankings illustrates this.
 
 ```{r}
 plotMD(cfit, legend="bottomleft", status=paste0(
