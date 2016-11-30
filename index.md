@@ -11,7 +11,8 @@ Topconfects builds on [TREAT](http://bioinformatics.oxfordjournals.org/content/2
 
 ```r
 install.packages("devtools")
-devtools::install("pfh/topconfects")
+
+devtools::install_github("pfh/topconfects")
 ```
 
 ## Usage
