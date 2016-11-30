@@ -39,20 +39,28 @@ Standard `limma` analysis steps.
 
 ```{r}
 design <- model.matrix(~Time+Treat)
+design[,]
 
 fit <-
     voom(y, design) %>%
     lmFit(design)
 
 cfit <- 
-    contrasts.fit(fit, coefficients=ncol(design)) %>% 
+    contrasts.fit(fit, coefficients=4) %>% 
     eBayes()
+
+cfit$df.prior
 ```
 
 Find largest fold changes that we can be confident of at FDR 0.05.
 
+<div style="border: 4px solid black; padding: 1em">
 ```{r}
 confects <- limma_confects(cfit, fdr=0.05)
+```
+</div>
+
+```{r}
 head(confects)
 ```
 
@@ -64,53 +72,85 @@ table(is.na(confects$confect))
 
 Here the usual `logFC` values estimated by `limma` as shown as dots, with lines to the `signed_confect` value.
 
-```{r fig.height=8}
-tc <- head(confects, 50) %>% mutate(name=factor(name,rev(name)))
-ggplot(tc, aes(y=name, x=logFC)) +
+```{r fig.height=7}
+head(confects, 50) %>% 
+mutate(name=factor(name,rev(name))) %>%
+ggplot(aes(y=name, x=logFC)) +
     geom_vline(xintercept=0) +
     geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
-    geom_point()
+    geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
 ```
 
-If we had gone by `adj.P.Val` we would have seen something rather different.
+If we had gone by the default `topTable` order, there is greater focus on highly expressed genes. The 95% confidence interval provided by `topTable` is shown as brackets. You can see that the confects moderation is larger than the inner end of the 95% cofidence interval, as confects controls FDR. As you go down the list and there are more true discoveries, this moderation becomes less harsh.
 
-```{r, fig.height=8}
-tt <- topTable(cfit, n=Inf)
-tt$name <- rownames(tt) %>% factor(.,rev(.))
-ggplot(head(tt, 50), aes(y=name, x=logFC)) + geom_vline(xintercept=0) + geom_point() 
+```{r, fig.height=7}
+top <- topTable(cfit, n=Inf, confint=TRUE)
+top$name <- rownames(top) %>% factor(.,rev(.))
+top$signed_confect <- confects$signed_confect[ match(top$name, confects$name) ]
+ggplot(head(top, 50), aes(y=name, x=logFC)) +
+    geom_vline(xintercept=0) +
+    geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
+    geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5)) +
+    geom_point(aes(x=CI.L), size=2, shape=40) +
+    geom_point(aes(x=CI.R), size=2, shape=41)
 ```
+
+An MD-plot highlighting the positions of the top 20 genes in both rankings illustrate this.
 
 ```{r}
-plotMD(cfit, status=paste0(
-    ifelse(rownames(cfit) %in% tt$name[1:20], "l",""),
-    ifelse(rownames(cfit) %in% confects$name[1:20], "cl", "")))
+plotMD(cfit, legend="bottomleft", status=paste0(
+    ifelse(rownames(cfit) %in% top$name[1:20], "topTable ",""),
+    ifelse(rownames(cfit) %in% confects$name[1:20], "confects ","")))
 ```
 
-Note the `confects` results above are the same as would be obtained using `limma::treat(cfit, lfc=1.55)`.
+Note the `confects` results above are the same as would be obtained using `limma::treat(cfit, lfc=2.15)`.
 
 ```{r}
-confects$confect[50]
+confects$confect[20]
 ```
-
 
 ## edgeR analysis
 
+An analysis in edgeR produces similar results.
+
 ```{r}
 y <- estimateDisp(y, design, robust=TRUE)
-y$common.dispersion
-plotBCV(y)
-
 efit <- glmQLFit(y, design, robust=TRUE)
+```
 
-econfects <- edger_confects(edger_fit, coef=4, fdr=0.05)
+<div style="border: 4px solid black; padding: 1em">
+```{r}
+econfects <- edger_confects(efit, coef=4, fdr=0.05)
+```
+</div>
 
-qlf <- glmQLFTest(efit, coef=4)
-qlf_tt <- topTags(qlf, n=Inf)
+```{r}
+head(econfects)
+```
+
+```{r fig.height=7}
+head(econfects, 50) %>% 
+mutate(name=factor(name,rev(name))) %>%
+ggplot(aes(y=name, x=logFC)) +
+    geom_vline(xintercept=0) +
+    geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
+    geom_point(aes(size=logCPM)) + scale_size(limits=c(0,15),range=c(0,6))
+```
+
+```{r}
+etop <-
+    glmQLFTest(efit, coef=4) %>%
+    topTags(n=Inf)
 
 plotMD(efit, legend="bottomleft", status=paste(
-    #ifelse(rownames(cfit) %in% tt$name, "top50-topTable",""),
-    #ifelse(rownames(cfit) %in% confects$name[1:100], "lc", ""),
-    ifelse(rownames(cfit) %in% econfects$name[1:5], "ec", ""),
-    ifelse(rownames(cfit) %in% rownames(qlf_tt)[1:5], "e","")))
+    ifelse(rownames(cfit) %in% econfects$name[1:20], "confects ", ""),
+    ifelse(rownames(cfit) %in% rownames(etop)[1:20], "topTags ","")))
 ```
+
+
+
+```{r}
+sessionInfo()
+```
+
 

@@ -1,6 +1,6 @@
 
 
-#' Confident log2 fold changes using limma's TREAT
+#' Confident log2 fold changes using limma's \code{treat}
 #'
 #' For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 #'

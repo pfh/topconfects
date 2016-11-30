@@ -1,0 +1,10 @@
+
+templates:
+  params:
+    bootswatch: cerulean
+
+navbar:
+    right:
+    - icon: fa-github
+      href: https://github.com/pfh/topconfects
+
