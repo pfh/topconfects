@@ -81,18 +81,16 @@ ggplot(aes(y=name, x=logFC)) +
     geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
 ```
 
-If we had gone by the default `topTable` order, there is greater focus on highly expressed genes. The 95% confidence interval provided by `topTable` is shown as brackets. You can see that the confects moderation is larger than the inner end of the 95% cofidence interval, as confects controls FDR. As you go down the list and there are more true discoveries, this moderation becomes less harsh.
+If we had gone by the default `topTable` order, there is greater focus on highly expressed genes.
 
 ```{r, fig.height=7}
-top <- topTable(cfit, n=Inf, confint=TRUE)
+top <- topTable(cfit, n=Inf)
 top$name <- rownames(top) %>% factor(.,rev(.))
 top$signed_confect <- confects$signed_confect[ match(top$name, confects$name) ]
 ggplot(head(top, 50), aes(y=name, x=logFC)) +
     geom_vline(xintercept=0) +
     geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
-    geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5)) +
-    geom_point(aes(x=CI.L), size=2, shape=40) +
-    geom_point(aes(x=CI.R), size=2, shape=41)
+    geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
 ```
 
 An MD-plot highlighting the positions of the top 20 genes in both rankings illustrate this.
@@ -134,7 +132,7 @@ mutate(name=factor(name,rev(name))) %>%
 ggplot(aes(y=name, x=logFC)) +
     geom_vline(xintercept=0) +
     geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
-    geom_point(aes(size=logCPM)) + scale_size(limits=c(0,15),range=c(0,6))
+    geom_point(aes(size=logCPM)) + scale_size(limits=c(0,15),range=c(0,5))
 ```
 
 ```{r}

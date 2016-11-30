@@ -25,18 +25,23 @@ edger_confects <- function(fit, coef=ncol(fit$design), contrast=NULL, fdr=0.05, 
 
     n <- nrow(fit)
 
+    top_tags <-
+        glmQLFTest(fit,coef=coef,contrast=contrast) %>%
+        topTags(n=n,sort.by="none")
+
     pfunc <- function(i, mag) {
-        top_treats <-
-            glmTreat(fit, coef=coef, contrast=contrast, lfc=mag) %>%
-            topTags(n=n, sort.by="none")
+        if (mag == 0.0)
+            top_treats <- top_tags
+        else
+            top_treats <-
+                glmTreat(fit, coef=coef, contrast=contrast, lfc=mag) %>%
+                topTags(n=n, sort.by="none")
+
         top_treats$table$PValue[i]
     }
 
     confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
 
-    top_tags <-
-        glmQLFTest(fit,coef=coef,contrast=contrast) %>%
-        topTags(n=n,sort.by="none")
     logFC <- top_tags$table$logFC[confects$index]
     confects$signed_confect <- sign(logFC) * confects$confect
     confects$logFC <- logFC
