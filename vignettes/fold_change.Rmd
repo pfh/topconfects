@@ -9,9 +9,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Load a dataset. This RNA-seq data investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
+<style>
+.contents h2 { margin-top: 2em }
+</style>
 
-```{r}
+This document shows typical Topconfects usage.
+
+The first step is to load a dataset. Here, we're looking at RNA-seq data that investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental and control conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
+
+```{r message=FALSE, warning=FALSE}
 library(topconfects)
 
 library(NBPSeq)
@@ -35,7 +41,7 @@ y <- calcNormFactors(y)
 
 ## limma analysis
 
-Standard `limma` analysis steps.
+### Standard limma analysis steps
 
 ```{r}
 design <- model.matrix(~Time+Treat)
@@ -52,25 +58,24 @@ cfit <-
 cfit$df.prior
 ```
 
+### Apply topconfects
+
 Find largest fold changes that we can be confident of at FDR 0.05.
 
-<div style="border: 4px solid black; padding: 1em">
 ```{r}
 confects <- limma_confects(cfit, fdr=0.05)
 ```
-</div>
+
+<br/>
 
 ```{r}
 head(confects)
 ```
 
-Genes that are not even different from zero effect size at the chosen FDR are given a `confect` of NA. We would have found 2184 genes using a traditional `limma::topTable` analysis with FDR=0.05.
 
-```{r}
-table(is.na(confects$confect))
-```
+### Looking at the result
 
-Here the usual `logFC` values estimated by `limma` as shown as dots, with lines to the `signed_confect` value.
+Here the usual `logFC` values estimated by `limma` are shown as dots, with lines to the `signed_confect` value.
 
 ```{r fig.height=7}
 head(confects, 50) %>% 
@@ -81,7 +86,7 @@ ggplot(aes(y=name, x=logFC)) +
     geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
 ```
 
-If we had gone by the default `topTable` order, there is greater focus on highly expressed genes.
+If we had gone by the default `topTable` order, there is greater focus on highly expressed genes. Some lower expressed genes are demoted, even though there is perfectly adequate evidence of a large fold change.
 
 ```{r, fig.height=7}
 top <- topTable(cfit, n=Inf)
@@ -107,24 +112,35 @@ Note the `confects` results above are the same as would be obtained using `limma
 confects$confect[20]
 ```
 
+Genes that are not even different from zero effect size at the chosen FDR are given a `confect` of NA. We would have found 2184 genes using a traditional `limma::topTable` analysis with FDR=0.05.
+
+```{r}
+table(is.na(confects$confect))
+```
+
 ## edgeR analysis
 
 An analysis in edgeR produces similar results.
+
+### Standard edgeR analysis
 
 ```{r}
 y <- estimateDisp(y, design, robust=TRUE)
 efit <- glmQLFit(y, design, robust=TRUE)
 ```
 
-<div style="border: 4px solid black; padding: 1em">
+### Apply topconfects
+
 ```{r}
 econfects <- edger_confects(efit, coef=4, fdr=0.05)
 ```
-</div>
 
 ```{r}
 head(econfects)
 ```
+
+
+### Looking at the result
 
 ```{r fig.height=7}
 head(econfects, 50) %>% 
@@ -145,7 +161,7 @@ plotMD(efit, legend="bottomleft", status=paste(
     ifelse(rownames(cfit) %in% rownames(etop)[1:20], "topTags ","")))
 ```
 
-
+---
 
 ```{r}
 sessionInfo()
