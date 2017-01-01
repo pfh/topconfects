@@ -9,6 +9,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!--
+devtools::load_all(".") ; rmarkdown::render("vignettes/fold_change.Rmd", intermediates_dir="/tmp", output_dir="/tmp")
+-->
+
 <style>
 .contents h2 { margin-top: 2em }
 </style>
@@ -17,7 +21,12 @@ This document shows typical Topconfects usage.
 
 The first step is to load a dataset. Here, we're looking at RNA-seq data that investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental and control conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
 
-```{r message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=FALSE, fig.width=7, fig.height=6)
+```
+
+
+```{r load, dependson="", message=FALSE, warning=FALSE}
 library(topconfects)
 
 library(NBPSeq)
@@ -43,33 +52,26 @@ y <- calcNormFactors(y)
 
 ### Standard limma analysis steps
 
-```{r}
+```{r limma}
 design <- model.matrix(~Time+Treat)
 design[,]
 
 fit <-
     voom(y, design) %>%
-    lmFit(design)
-
-cfit <- 
-    contrasts.fit(fit, coefficients=4) %>% 
+    lmFit(design) %>%
     eBayes()
 
-cfit$df.prior
+fit$df.prior
 ```
 
 ### Apply topconfects
 
 Find largest fold changes that we can be confident of at FDR 0.05.
 
-```{r}
-confects <- limma_confects(cfit, fdr=0.05)
-```
+```{r limma_confects}
+confects <- limma_confects(fit, coef=4, fdr=0.05)
 
-<br/>
-
-```{r}
-head(confects)
+confects
 ```
 
 
@@ -78,45 +80,27 @@ head(confects)
 Here the usual `logFC` values estimated by `limma` are shown as dots, with lines to the `signed_confect` value.
 
 ```{r fig.height=7}
-head(confects, 50) %>% 
-mutate(name=factor(name,rev(name))) %>%
-ggplot(aes(y=name, x=logFC)) +
-    geom_vline(xintercept=0) +
-    geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
-    geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
+confects_plot(confects)
 ```
 
-If we had gone by the default `topTable` order, there is greater focus on highly expressed genes. Some lower expressed genes are demoted, even though there is perfectly adequate evidence of a large fold change.
+Let's compare this to the ranking we obtain from `topTable`.
 
 ```{r, fig.height=7}
-top <- topTable(cfit, n=Inf)
-top$name <- rownames(top) %>% factor(.,rev(.))
-top$signed_confect <- confects$signed_confect[ match(top$name, confects$name) ]
-ggplot(head(top, 50), aes(y=name, x=logFC)) +
-    geom_vline(xintercept=0) +
-    geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
-    geom_point(aes(size=AveExpr)) + scale_size(limits=c(0,15),range=c(0,5))
+top <- topTable(fit, coef=4, n=Inf)
+
+rank_rank_plot(confects$table$name, rownames(top), "limma_confects", "topTable")
 ```
 
-An MD-plot highlighting the positions of the top 20 genes in both rankings illustrates this.
+You can see that the top 19 genes from topTable are all within the top 40 for topconfects ranking, but topconfects has also highly ranked some other genes. These have a large effect size, and sufficient if not overwhelming evidence of this.
+
+An MD-plot highlighting the positions of the top 40 genes in both rankings also illustrates the differences between these two ways of ranking genes.
 
 ```{r}
-plotMD(cfit, legend="bottomleft", status=paste0(
-    ifelse(rownames(cfit) %in% top$name[1:20], "topTable ",""),
-    ifelse(rownames(cfit) %in% confects$name[1:20], "confects ","")))
+plotMD(fit, legend="bottomleft", status=paste0(
+    ifelse(rownames(fit) %in% rownames(top)[1:40], "topTable ",""),
+    ifelse(rownames(fit) %in% confects$table$name[1:40], "confects ","")))
 ```
 
-Note the `confects` results above are the same as would be obtained using `limma::treat(cfit, lfc=2.15)`.
-
-```{r}
-confects$confect[20]
-```
-
-Genes that are not even different from zero effect size at the chosen FDR are given a `confect` of NA. We would have found 2184 genes using a traditional `limma::topTable` analysis with FDR=0.05.
-
-```{r}
-table(is.na(confects$confect))
-```
 
 ## edgeR analysis
 
@@ -124,31 +108,24 @@ An analysis in edgeR produces similar results.
 
 ### Standard edgeR analysis
 
-```{r}
+```{r edger, dependson="load"}
 y <- estimateDisp(y, design, robust=TRUE)
 efit <- glmQLFit(y, design, robust=TRUE)
 ```
 
 ### Apply topconfects
 
-```{r}
+```{r edger_confects, dependson=""}
 econfects <- edger_confects(efit, coef=4, fdr=0.05)
-```
 
-```{r}
-head(econfects)
+econfects
 ```
 
 
 ### Looking at the result
 
 ```{r fig.height=7}
-head(econfects, 50) %>% 
-mutate(name=factor(name,rev(name))) %>%
-ggplot(aes(y=name, x=logFC)) +
-    geom_vline(xintercept=0) +
-    geom_segment(aes(yend=name, x=signed_confect, xend=logFC)) +
-    geom_point(aes(size=logCPM)) + scale_size(limits=c(0,15),range=c(0,5))
+confects_plot(econfects)
 ```
 
 ```{r}
@@ -156,9 +133,15 @@ etop <-
     glmQLFTest(efit, coef=4) %>%
     topTags(n=Inf)
 
-plotMD(efit, legend="bottomleft", status=paste(
-    ifelse(rownames(cfit) %in% econfects$name[1:20], "confects ", ""),
-    ifelse(rownames(cfit) %in% rownames(etop)[1:20], "topTags ","")))
+plotMD(efit, legend="bottomleft", status=paste0(
+    ifelse(rownames(efit) %in% econfects$table$name[1:40], "confects ", ""),
+    ifelse(rownames(efit) %in% rownames(etop)[1:40], "topTags ","")))
+```
+
+### Comparing limma and edgeR results
+
+```{r fig.height=7}
+rank_rank_plot(confects$table$name, econfects$table$name, "limma confects", "edgeR confects")
 ```
 
 ---

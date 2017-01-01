@@ -1,6 +1,9 @@
 
+quick :
+	Rscript -e "devtools::check(build_args=c('--no-build-vignettes'))"
+
 check :
-	Rscript -e "devtools::check(quiet=TRUE)"
+	Rscript -e "devtools::check()"
 
 document :
 	Rscript -e "devtools::document()"

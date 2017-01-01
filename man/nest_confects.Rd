@@ -2,9 +2,9 @@
 % Please edit documentation in R/nest_confects.R
 \name{nest_confects}
 \alias{nest_confects}
-\title{Find sets of discoveries for a range of effect sizes, controlling FDR.}
+\title{General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR}
 \usage{
-nest_confects(n, pfunc, fdr = 0.01, max = 30, step = 0.05)
+nest_confects(n, pfunc, fdr = 0.05, max = 30, step = 0.05)
 }
 \arguments{
 \item{n}{Number of items being tested.}
@@ -18,7 +18,9 @@ nest_confects(n, pfunc, fdr = 0.01, max = 30, step = 0.05)
 \item{step}{Granularity of effect sizes to test.}
 }
 \value{
-A data frame with the following columns:
+A "Topconfects" object, containing a table of results and various associated information.
+
+The most important part of this object is the $table element, a data frame with the following columns:
 
 \itemize{
     \item \code{rank} - Ranking by \code{confect} and for equal \code{confect} by p-value at that effect size.

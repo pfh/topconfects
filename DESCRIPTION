@@ -8,17 +8,24 @@ Depends:
     R (>= 3.3.0)
 Imports:
     methods,
+    utils,
+    stats,
     assertthat,
     magrittr,
     dplyr,
+    purrr,
+    ggplot2,
     limma,
-    edgeR
+    edgeR,
+    nloptr
 Suggests:
     NBPSeq,
     testthat,
     knitr,
     rmarkdown,
-    ggplot2
+    reshape2,
+    tidyr,
+    readr
 License: LGPL-2.1 | file LICENSE
 URL: https://github.com/pfh/topconfects
 Encoding: UTF-8

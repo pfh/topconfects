@@ -1,13 +1,15 @@
 
-#' Confident log2 fold changes using edgeR's \code{glmTreat}
+#' Confident effect sizes using edgeR, both linear and non-linear
 #'
 #' For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 #'
 #' @param fit An edgeR DGEGLM object.
 #'
-#' @param coef Coefficient to test, as per \code{glmTreat}. Use either coef or contrast.
+#' @param coef Coefficient to test, as per \code{glmTreat}. Use either coef or contrast or effect.
 #'
-#' @param contrast Contrast to test, as per \code{glmTreat}. Use either coef or contrast.
+#' @param contrast Contrast to test, as per \code{glmTreat}. Use either coef or contrast or effect.
+#'
+#' @param effect A non-linear effect, created with one of the effect_... functions. Use either coef or contrast or effect.
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
@@ -15,38 +17,45 @@
 #'
 #' @param step Granularity of log2 fold changes to test.
 #'
+#' @param null "null" parameter passed through to edger::glmTreat (if coef or contrast given). Choices are "worst.case" or "interval". Note that the default here is "worst.case", to be consistent with other functions in topconfects. This differs from the default for glmTreat.
+#'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-edger_confects <- function(fit, coef=ncol(fit$design), contrast=NULL, fdr=0.05, max=30.0, step=0.05) {
+edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05, max=30.0, step=0.05, null="worst.case") {
     assert_that(is(fit, "DGEGLM"))
+    assert_that((!is.null(coef)) + (!is.null(contrast)) + (!is.null(effect)) == 1)
 
-    n <- nrow(fit)
+    if (!is.null(effect))
+        confects <- edger_nonlinear_confects(fit, effect, fdr=fdr, max=max, step=step)
+    else {
+        n <- nrow(fit)
 
-    top_tags <-
-        glmQLFTest(fit,coef=coef,contrast=contrast) %>%
-        topTags(n=n,sort.by="none")
+        top_tags <-
+            glmQLFTest(fit,coef=coef,contrast=contrast) %>%
+            topTags(n=n,sort.by="none")
 
-    pfunc <- function(i, mag) {
-        if (mag == 0.0)
-            top_treats <- top_tags
-        else
-            top_treats <-
-                glmTreat(fit, coef=coef, contrast=contrast, lfc=mag) %>%
-                topTags(n=n, sort.by="none")
+        pfunc <- function(i, mag) {
+            if (mag == 0.0)
+                top_treats <- top_tags
+            else
+                top_treats <-
+                    glmTreat(fit, coef=coef, contrast=contrast, lfc=mag, null=null) %>%
+                    topTags(n=n, sort.by="none")
 
-        top_treats$table$PValue[i]
+            top_treats$table$PValue[i]
+        }
+
+        confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
+        confects$effect_desc <- "log2 fold change"
+        logFC <- top_tags$table$logFC[confects$table$index]
+        confects$table$signed_confect <- sign(logFC) * confects$table$confect
+        confects$table$effect <- logFC
+        confects$table$logCPM <- top_tags$table$logCPM[confects$table$index]
+        confects$table$name <- rownames(top_tags$table)[confects$table$index]
     }
-
-    confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
-
-    logFC <- top_tags$table$logFC[confects$index]
-    confects$signed_confect <- sign(logFC) * confects$confect
-    confects$logFC <- logFC
-    confects$logCPM <- top_tags$table$logCPM[confects$index]
-    confects$name <- rownames(top_tags$table)[confects$index]
 
     confects
 }

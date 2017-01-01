@@ -1,6 +1,6 @@
 
 
-#' Find sets of discoveries for a range of effect sizes, controlling FDR.
+#' General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR
 #'
 #' Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate for each set.
 #'
@@ -14,7 +14,9 @@
 #'
 #' @param step Granularity of effect sizes to test.
 #'
-#' @return A data frame with the following columns:
+#' @return A "Topconfects" object, containing a table of results and various associated information.
+#'
+#' The most important part of this object is the $table element, a data frame with the following columns:
 #'
 #' \itemize{
 #'     \item \code{rank} - Ranking by \code{confect} and for equal \code{confect} by p-value at that effect size.
@@ -29,7 +31,7 @@
 #' With this caveat understood, one may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible.
 #'
 #' @export
-nest_confects <- function(n, pfunc, fdr=0.01, max=30.0, step=0.05) {
+nest_confects <- function(n, pfunc, fdr=0.05, max=30.0, step=0.05) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 
@@ -50,7 +52,10 @@ nest_confects <- function(n, pfunc, fdr=0.01, max=30.0, step=0.05) {
         mag <- mag + step
     }
 
-    data.frame(rank=seq_len(n), index=indices, confect=mags)
+    result <- new("Topconfects", list(
+        table=data.frame(rank=seq_len(n), index=indices, confect=mags),
+        effect_desc = "effect size",
+        fdr=fdr, max=max, step=step, pfunc=pfunc))
 }
 
 

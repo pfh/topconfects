@@ -2,23 +2,27 @@
 % Please edit documentation in R/edger.R
 \name{edger_confects}
 \alias{edger_confects}
-\title{Confident log2 fold changes using edgeR's \code{glmTreat}}
+\title{Confident effect sizes using edgeR, both linear and non-linear}
 \usage{
-edger_confects(fit, coef = ncol(fit$design), contrast = NULL, fdr = 0.05,
-  max = 30, step = 0.05)
+edger_confects(fit, coef = NULL, contrast = NULL, effect = NULL,
+  fdr = 0.05, max = 30, step = 0.05, null = "worst.case")
 }
 \arguments{
 \item{fit}{An edgeR DGEGLM object.}
 
-\item{coef}{Coefficient to test, as per \code{glmTreat}. Use either coef or contrast.}
+\item{coef}{Coefficient to test, as per \code{glmTreat}. Use either coef or contrast or effect.}
 
-\item{contrast}{Contrast to test, as per \code{glmTreat}. Use either coef or contrast.}
+\item{contrast}{Contrast to test, as per \code{glmTreat}. Use either coef or contrast or effect.}
+
+\item{effect}{A non-linear effect, created with one of the effect_... functions. Use either coef or contrast or effect.}
 
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{max}{Maximum log2 fold change to test for.}
 
 \item{step}{Granularity of log2 fold changes to test.}
+
+\item{null}{"null" parameter passed through to edger::glmTreat (if coef or contrast given). Choices are "worst.case" or "interval". Note that the default here is "worst.case", to be consistent with other functions in topconfects. This differs from the default for glmTreat.}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.

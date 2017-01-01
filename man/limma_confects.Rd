@@ -2,12 +2,17 @@
 % Please edit documentation in R/limma.R
 \name{limma_confects}
 \alias{limma_confects}
-\title{Confident log2 fold changes using limma's \code{treat}}
+\title{Confident log2 fold changes using limma's treat function, linear effects only}
 \usage{
-limma_confects(fit, fdr = 0.05, max = 30, step = 0.05)
+limma_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05, max = 30,
+  step = 0.05)
 }
 \arguments{
-\item{fit}{A limma MArrayLM object with one coefficient. (Use limma::contrasts.fit reduce the fit object down to the contrast or coefficient that you are interested in.)}
+\item{fit}{A limma MArrayLM object.}
+
+\item{coef}{Coefficient to test, as per \code{glmTreat}. Use either coef or contrast, or have fit be the result of contrasts.fit.}
+
+\item{contrast}{Contrast to test, as per \code{glmTreat}. Use either coef or contrast, or have fit be the result of contrasts.fit.}
 
 \item{fdr}{False Discovery Rate to control for.}
 

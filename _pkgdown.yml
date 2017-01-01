@@ -8,3 +8,20 @@ navbar:
     - icon: fa-github
       href: https://github.com/pfh/topconfects
 
+reference:
+  - title: Find top confident effect sizes
+    contents:
+      - edger_confects
+      - limma_confects
+      - limma_nonlinear_confects
+      - nest_confects
+
+  - title: Non-linear effect size definitions
+    desc: These can be used with edger_confects or limma_nonlinear_confects.
+    contents:
+      - starts_with("effect_")
+
+  - title: Diagnostic plots
+    contents:
+      - ends_with("_plot")
+
