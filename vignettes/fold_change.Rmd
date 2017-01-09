@@ -7,10 +7,12 @@ vignette: >
   %\VignetteIndexEntry{Confident fold change}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+params:
+    cache: !r FALSE
 ---
 
 <!--
-devtools::load_all(".") ; rmarkdown::render("vignettes/fold_change.Rmd", intermediates_dir="/tmp", output_dir="/tmp")
+devtools::load_all(".") ; rmarkdown::render("vignettes/fold_change.Rmd", intermediates_dir="/tmp", output_dir="/tmp", params=list(cache=TRUE))
 -->
 
 <style>
@@ -22,11 +24,11 @@ This document shows typical Topconfects usage.
 The first step is to load a dataset. Here, we're looking at RNA-seq data that investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental and control conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=FALSE, fig.width=7, fig.height=6)
+knitr::opts_chunk$set(cache=params$cache, autodep=params$cache, fig.width=7, fig.height=6)
 ```
 
 
-```{r load, dependson="", message=FALSE, warning=FALSE}
+```{r load, message=FALSE, warning=FALSE}
 library(topconfects)
 
 library(NBPSeq)
@@ -83,6 +85,10 @@ Here the usual `logFC` values estimated by `limma` are shown as dots, with lines
 confects_plot(confects)
 ```
 
+```{r}
+confects_plot_me(confects)
+```
+
 Let's compare this to the ranking we obtain from `topTable`.
 
 ```{r, fig.height=7}
@@ -108,14 +114,14 @@ An analysis in edgeR produces similar results.
 
 ### Standard edgeR analysis
 
-```{r edger, dependson="load"}
+```{r edger}
 y <- estimateDisp(y, design, robust=TRUE)
 efit <- glmQLFit(y, design, robust=TRUE)
 ```
 
 ### Apply topconfects
 
-```{r edger_confects, dependson=""}
+```{r edger_confects}
 econfects <- edger_confects(efit, coef=4, fdr=0.05)
 
 econfects

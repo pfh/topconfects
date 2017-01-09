@@ -28,15 +28,13 @@ first_match <- function(avail, options, default=NULL) {
 #' @export
 confects_plot <- function(confects, n=50) {
     tab <- confects$table
-    effect_col <- first_match(c("effect", "logFC"), names(tab))
-    confect_col <- first_match(names(tab), c("signed_confect", "confect"))
     mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
 
     p <- head(tab, n) %>%
         mutate_(name =~ factor(name,rev(name))) %>%
-        ggplot(aes_string(y="name", x=effect_col)) +
+        ggplot(aes_string(y="name", x="effect")) +
         geom_vline(xintercept=0) +
-        geom_segment(aes_string(yend="name", x=confect_col, xend=effect_col)) +
+        geom_segment(aes_string(yend="name", x="confect", xend="effect")) +
         geom_point(aes_string(size=mag_col)) +
         labs(x = confects$effect_desc)
 
@@ -56,14 +54,12 @@ confects_plot <- function(confects, n=50) {
 #' @export
 confects_plot_me <- function(confects) {
     tab <- confects$table
-    effect_col <- first_match(c("effect", "logFC"), names(tab))
-    confect_col <- first_match(names(tab), c("signed_confect", "confect"))
     mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
 
     p <- ggplot(tab, aes_string(x=mag_col)) +
-        geom_point(aes_string(y=effect_col), color="white") +
+        geom_point(aes_string(y="effect"), color="white") +
         geom_hline(yintercept=0) +
-        geom_point(data=tab[!is.na(tab[[confect_col]]),], aes_string(y=confect_col)) +
+        geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
         labs(y = confects$effect_desc)
 
     p

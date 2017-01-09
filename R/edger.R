@@ -51,7 +51,7 @@ edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05,
         confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
         confects$effect_desc <- "log2 fold change"
         logFC <- top_tags$table$logFC[confects$table$index]
-        confects$table$signed_confect <- sign(logFC) * confects$table$confect
+        confects$table$confect <- sign(logFC) * confects$table$confect
         confects$table$effect <- logFC
         confects$table$logCPM <- top_tags$table$logCPM[confects$table$index]
         confects$table$name <- rownames(top_tags$table)[confects$table$index]

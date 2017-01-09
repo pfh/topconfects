@@ -11,6 +11,6 @@ document :
 site : document
 	Rscript -e "pkgdown::build_site()"
 
-publish : site
+publish : 
 	scp -r docs/* logarithmic.net:www/topconfects/
 

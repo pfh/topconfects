@@ -195,7 +195,7 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
     confects <- nest_confects(n_items, pfunc, fdr=fdr, max=max, step=step)
 
     if (effect$signed)
-        confects$table$signed_confect <- sign(effects[confects$table$index]) * confects$table$confect
+        confects$table$confect <- sign(effects[confects$table$index]) * confects$table$confect
     confects$table$effect <- effects[confects$table$index]
     confects$h1_fits <- h1_fits
 

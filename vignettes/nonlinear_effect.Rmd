@@ -7,20 +7,22 @@ vignette: >
     %\VignetteIndexEntry{Confident fold change}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
+params:
+    cache: !r FALSE
 ---
 
 <!--
-devtools::load_all(".") ; rmarkdown::render("vignettes/nonlinear_effect.Rmd", intermediates_dir="/tmp", output_dir="/tmp")
+devtools::load_all(".") ; rmarkdown::render("vignettes/nonlinear_effect.Rmd", intermediates_dir="/tmp", output_dir="/tmp", params=list(cache=TRUE))
 -->
 
 <style>
 .contents h2 { margin-top: 2em }
 </style>
 
-To illustrate non-linear interaction effects, we will be working with the GEO dataset [GSE80512](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80512). Briefly, this examines the effect of stressing yeast with heat or high salt concentration, with wildtype yeast and a yeast with a mutated histone in which post-translational phosphorylation at a certain site is prevented (thought to affect gene regulation). This data set was chosen simply because it is a good quality, publicly available data set which can use to illustrate the interaction of two experimental factors.
+To illustrate non-linear interaction effects, we will be working with the GEO dataset [GSE80512](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80512). Briefly, this examines the effect of stressing yeast with heat or high salt concentration, with wildtype yeast and a yeast with a mutated histone in which post-translational phosphorylation at a certain site is prevented (thought to affect gene regulation). This data set was chosen simply because it is a good quality, publicly available data set which can be used to illustrate the interaction of two experimental factors.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=TRUE, autodep=TRUE, fig.width=7, fig.height=6)
+knitr::opts_chunk$set(cache=params$cache, autodep=params$cache, fig.width=7, fig.height=6)
 ```
 
 ```{r load, message=FALSE, warning=FALSE}

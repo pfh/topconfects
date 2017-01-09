@@ -28,11 +28,13 @@ The most important part of this object is the $table element, a data frame with 
     \item \code{confect} - CONfident efFECT size.
 }
 
-The usage is as follows: To find a set of tests which have effect size at least \code{x} with the specified FDR, take the rows with \code{confect >= x}.
+The usage is as follows: To find a set of tests which have effect size at least \code{x} with the specified FDR, take the rows with \code{abs(confect) >= x}.
 
 Some tests may have been given the same \code{confect}. To maintain the FDR, all or none should be chosen.
 
 With this caveat understood, one may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible.
+
+Some wrappers around this function may add a sign to the \code{confect} column, if it makes sense to do so. They will also generally add an \code{effect} column, containing an estimate of the effect size that aims to be unbiassed rather than a conservative lower bound.
 }
 \description{
 Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate for each set.

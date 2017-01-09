@@ -45,8 +45,8 @@ limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, max=30.0, st
 
     confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
     logFC <- cfit$coefficients[confects$table$index, 1]
-    confects$table$signed_confect <- sign(logFC) * confects$table$confect
-    confects$table$logFC <- logFC
+    confects$table$confect <- sign(logFC) * confects$table$confect
+    confects$table$effect <- logFC
 
     confects$table$AveExpr <- cfit$Amean[confects$table$index]
     confects$table$name <- rownames(cfit)[confects$table$index]

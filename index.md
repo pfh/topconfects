@@ -1,4 +1,4 @@
-# | (-● Topconfects 
+# | -● Topconfects 
 
 (Under development) TOP results by CONfident efFECT Size. Topconfects is an R package intended for RNA-seq or microarray Differntial Expression analysis and similar, where we are interested in estimating many effect sizes -- one per gene -- from few samples.
 
@@ -12,7 +12,7 @@ Topconfects builds on [TREAT](http://bioinformatics.oxfordjournals.org/content/2
 
 **Rank by an effect size that is meaningful.** Once we stop thinking in terms of zero vs non-zero effect and start thinking about effect size, the limitations of a linear or log-linear model become apparent. Topconfects therefore includes a variety of non-linear effect sizes.
 
-* Examining the interaction of two factors, and a log-linear model allows testing of odds ratios. However this will give a large effect size when, say, a proportion shifts from 0.01% to 0.1%. We may instead be interested in the difference of proportions, to avoid looking at such small shifts. Topconfects provides `effect_shift_log2` for this.
+* Examining the interaction of two factors, a log-linear model allows testing of odds ratios. However this will give a large effect size when, say, a proportion shifts from 0.01% to 0.1%. We may instead be interested in the difference of proportions, to avoid looking at such small shifts. Topconfects provides `effect_shift_log2` for this.
 
 * In an ANOVA test, we need to test multiple coefficients, and we may want to treat each group equally rather than nominating a control group. Topconfects provides `effect_sd` for this, where the effect size is the standard deviation of a set of coefficients.
 
