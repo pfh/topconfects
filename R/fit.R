@@ -123,7 +123,7 @@ effect_contrast <- function(contrast) {
 
 #' Standard-deviation of a set of coefficients as effect size
 #'
-#' This is intended as the effect size version of an ANOVA. The effect size is the standard deviation of some coefficients about their mean.
+#' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rss, it is the root sum of squared differences from the mean.
 #'
 #' @param coef The column numbers of the design matrix for the relevant coefficients.
 #'
@@ -131,10 +131,12 @@ effect_contrast <- function(contrast) {
 #'
 #' An object defining how to calculate an effect size.
 #'
+#' \code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
+#'
 #' @export
 effect_sd <- function(coef) {
     n <- length(coef)
-    assert_that(n > 2)
+    assert_that(n > 1)   #n=2 case may be problematic
 
     list(
         signed = FALSE,
@@ -156,6 +158,34 @@ effect_sd <- function(coef) {
     )
 }
 
+
+#' @rdname effect_sd
+#' @export
+effect_rss <- function(coef) {
+    n <- length(coef)
+    assert_that(n > 1)   #n=2 case may be problematic
+
+    list(
+        signed = FALSE,
+        df = n-1,
+
+        calc = function(beta) sqrt(sum( (beta[coef]-mean(beta[coef]))**2 )),
+
+        constraint = function(effect_size) {
+            target <- effect_size**2
+            function(beta) {
+                bc <- beta[coef]
+                mbc <- mean(bc)
+                list(
+                    score = target - sum((bc-mbc)**2),
+                    grad = -2*(1-1/n)*(bc-mbc)
+                )
+            }
+        }
+    )
+}
+
+
 #' Shift of mass effect
 #'
 #' Detect a "shift of mass" between two conditions. For example expression might move later in a time series in an experimental condition vs a control. If all expression shifted to a later time in the experimental condition, this would be given an effect size of 1. Conversely if all expression shifted to an earlier time, the effect size would be -1.
@@ -164,7 +194,7 @@ effect_sd <- function(coef) {
 #'
 #' @param coef2 Corresponding column numbers for the second condition.
 #'
-#' effect_shift_log2 is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
+#' \code{effect_shift_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
 #'
 #' @return
 #'

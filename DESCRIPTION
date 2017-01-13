@@ -25,7 +25,9 @@ Suggests:
     rmarkdown,
     reshape2,
     tidyr,
-    readr
+    readr,
+    org.At.tair.db,
+    AnnotationDbi
 License: LGPL-2.1 | file LICENSE
 URL: https://github.com/pfh/topconfects
 Encoding: UTF-8

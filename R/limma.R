@@ -52,6 +52,12 @@ limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, max=30.0, st
     confects$table$name <- rownames(cfit)[confects$table$index]
     confects$effect_desc <- "log2 fold change"
 
+    confects$limma_fit <- fit
+
+    if (!is.null(fit$genes)) {
+        confects$table <- cbind(confects$table, fit$genes[confects$table$index,])
+    }
+
     confects
 }
 

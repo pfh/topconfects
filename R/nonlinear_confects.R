@@ -122,7 +122,12 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0,
     confects$table$AveExpr <- limma_fit$Amean[confects$table$index]
     confects$table$name <- rownames(limma_fit)[confects$table$index]
 
+    confects$object <- object
     confects$limma_fit <- limma_fit
+
+    if (!is.null(eawp$probes)) {
+        confects$table <- cbind(confects$table, eawp$probes[confects$table$index,])
+    }
 
     confects
 }

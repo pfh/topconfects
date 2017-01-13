@@ -4,7 +4,7 @@ methods::setClass("Topconfects", methods::representation("list"))
 
 methods::setMethod("show", "Topconfects", function(object) {
     cat("$table\n")
-    print.data.frame(head(object$table, 10), row.names=FALSE)
+    print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
     if (nrow(object$table) > 10) cat("...\n")
     cat(sum(!is.na(object$table$confect)),"of",nrow(object$table),"non-zero", object$effect_desc, "at FDR",object$fdr,"\n")
 })

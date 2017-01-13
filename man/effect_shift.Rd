@@ -14,7 +14,7 @@ effect_shift_log2(coef1, coef2)
 
 \item{coef2}{Corresponding column numbers for the second condition.
 
-effect_shift_log2 is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.}
+\code{effect_shift_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.}
 }
 \value{
 An object defining how to calculate an effect size.

@@ -34,14 +34,30 @@ library(topconfects)
 library(NBPSeq)
 library(edgeR)
 library(limma)
+
 library(dplyr)
 library(ggplot2)
 
 data(arab)
 
+# Retrieve symbol and description for each gene
+info <- 
+    AnnotationDbi::select(org.At.tair.db::org.At.tair.db, rownames(arab), c("SYMBOL","GENENAME")) %>%
+    group_by(TAIR) %>% 
+    summarize(
+        SYMBOL=paste(unique(na.omit(SYMBOL)),collapse="/"), 
+        GENENAME=paste(unique(na.omit(GENENAME)),collapse="/"))
+arab_info <- 
+    info[match(rownames(arab),info$TAIR),] %>% 
+    select(-TAIR) %>%
+    as.data.frame
+rownames(arab_info) <- rownames(arab)
+
+# Extract experimental design from sample names
 Treat <- factor(substring(colnames(arab),1,4)) %>% relevel(ref="mock")
 Time <- factor(substring(colnames(arab),5,5))
-y <- DGEList(arab)
+
+y <- DGEList(arab, genes=as.data.frame(arab_info))
 
 # Keep genes with at least 3 samples having an RPM of more than 2
 keep <- rowSums(cpm(y)>2) >= 3
@@ -84,6 +100,8 @@ Here the usual `logFC` values estimated by `limma` are shown as dots, with lines
 ```{r fig.height=7}
 confects_plot(confects)
 ```
+
+`confects_plot_me` overlays the confects (black) on a Mean-Difference Plot (white) (as might be produced by `limma::plotMD`). As we should expect, the very noisy differences with low mean expression are removed if we look at the confects.
 
 ```{r}
 confects_plot_me(confects)
