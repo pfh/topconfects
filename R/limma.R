@@ -21,7 +21,7 @@
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, max=30.0, step=0.05) {
+limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, max=30.0, step=0.01) {
     assert_that(is(fit, "MArrayLM"))
 
     cfit <- fit

@@ -12,7 +12,7 @@ params:
 ---
 
 <!--
-devtools::load_all(".") ; rmarkdown::render("vignettes/nonlinear_effect.Rmd", intermediates_dir="/tmp", output_dir="/tmp", params=list(cache=TRUE))
+devtools::load_all(".") ; rmarkdown::render("vignettes/nonlinear_effect.Rmd", intermediates_dir="/tmp", output_dir="/tmp", clean=FALSE, params=list(cache=TRUE))
 -->
 
 <style>
@@ -22,7 +22,9 @@ devtools::load_all(".") ; rmarkdown::render("vignettes/nonlinear_effect.Rmd", in
 To illustrate non-linear interaction effects, we will be working with the GEO dataset [GSE80512](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80512). Briefly, this examines the effect of stressing yeast with heat or high salt concentration, with wildtype yeast and a yeast with a mutated histone in which post-translational phosphorylation at a certain site is prevented (thought to affect gene regulation). This data set was chosen simply because it is a good quality, publicly available data set which can be used to illustrate the interaction of two experimental factors.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=params$cache, autodep=params$cache, fig.width=7, fig.height=6)
+knitr::opts_chunk$set(fig.width=7, fig.height=6)
+if (params$cache)
+    knitr::opts_chunk$set(cache=TRUE, autodep=TRUE, cache.path="/tmp/nonlinear_effect_cache/")
 ```
 
 ```{r load, message=FALSE, warning=FALSE}
@@ -40,6 +42,15 @@ counts <-
     read.delim("GSE80512_DESeq2_raw_counts.txt.gz", row.names=1) %>% 
     as.matrix
 
+# Retrieve symbol and description for each gene
+info <- AnnotationDbi::select(
+    org.Sc.sgd.db::org.Sc.sgd.db, 
+    rownames(counts), c("GENENAME","DESCRIPTION")) 
+all(rownames(counts) == info$ORF)
+info <- select(info, GENENAME, DESCRIPTION) %>% as.data.frame
+rownames(info) <- rownames(counts)
+
+# Experiment design
 samples <- read_csv(
    "strain,stress,sample
     wt,none,Sample_1_13462_CGATGT
@@ -64,7 +75,6 @@ samples <- read_csv(
         strain=factor(strain,unique(strain)),
         stress=factor(stress,unique(stress)))
 all(samples$sample == colnames(counts))
-
 ```
 
 ## edgeR fit
@@ -73,7 +83,7 @@ all(samples$sample == colnames(counts))
 design <- model.matrix(~ 0 + strain:stress, data=samples)
 colnames(design)
 
-y <- DGEList(counts)
+y <- DGEList(counts, genes=info)
 keep <- rowSums(cpm(y)>2) >= 3
 table(keep)
 y <- y[keep, , keep.lib.sizes=FALSE]
@@ -141,7 +151,7 @@ top <- fit %>%
 
 table(top$table$FDR <= 0.05)
 
-head(top$table)
+print(head(top$table, 10), right=FALSE)
 ```
 
 We have significance to spare, but:
@@ -184,8 +194,17 @@ Let us now seek out genes where
 
 > `salt_mutant/(none_mutant+salt_mutant) - salt_wt/(none_wt+salt_wt)` 
 > has maximum magnitude.
+>
+> The response to salt in the mutant, compared to the wildtype.
 
 That is, a "difference of proportions".
+
+<!--
+> `(salt_mutant*none_wt-none_mutant*salt_wt)/(salt_mutant*none_wt+none_mutant*salt_wt)`
+> has maximum magnitude.
+
+This is Yule's Q or Kruskall and Wallace's gamma, treating our data as a contingency table. However in testing its significance we will still be using the negative binomial noise distribution.
+-->
 
 ```{r nonlinear}
 # This creates an object specifying the non-linear effect we are interested in.
@@ -194,7 +213,7 @@ That is, a "difference of proportions".
 #    and coefficients need to be transformed back to a linear scale.
 effect <- effect_shift_log2(c(1,3),c(2,4))
 
-nonlinear <- edger_confects(fit, effect=effect, step=0.01)
+nonlinear <- edger_confects(fit, effect=effect)
 
 nonlinear
 ```
@@ -208,6 +227,24 @@ show_stamps(nonlinear$table$name, c("none", "salt"))
 ```
 
 Look at all these wonderful interactions that were hiding in the data!
+
+
+## Appendix: Lack of symmetry
+
+The non-linear effect size we examined is not symmetric in the two experimental factors. We might instead seek genes where
+
+> `salt_mutant/(salt_wt+salt_mutant) - none_mutant/(none_wt+none_mutant)` 
+> has maximum magnitude.
+>
+> The response to the mutation in salt, compared to neutral conditions.
+
+```{r nonlinear2}
+effect2 <- effect_shift_log2(c(1,2),c(3,4))
+nonlinear2 <- edger_confects(fit, effect=effect2)
+show_stamps(nonlinear2$table$name, c("none", "salt"))
+```
+
+The top ranked genes are different. Here they are not as interesting.
 
 ---
 

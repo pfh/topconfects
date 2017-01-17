@@ -5,7 +5,7 @@
 \title{Confident effect sizes using edgeR, both linear and non-linear}
 \usage{
 edger_confects(fit, coef = NULL, contrast = NULL, effect = NULL,
-  fdr = 0.05, max = 30, step = 0.05, null = "worst.case")
+  fdr = 0.05, max = 30, step = 0.01, null = "worst.case")
 }
 \arguments{
 \item{fit}{An edgeR DGEGLM object.}
@@ -26,6 +26,8 @@ edger_confects(fit, coef = NULL, contrast = NULL, effect = NULL,
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
+
+#' Technical note when using a non-linear effect size: Signed confects are based on TREAT-style p-values. Unsigned consfects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
 }
 \description{
 For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?

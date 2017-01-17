@@ -33,7 +33,7 @@
 #' Some wrappers around this function may add a sign to the \code{confect} column, if it makes sense to do so. They will also generally add an \code{effect} column, containing an estimate of the effect size that aims to be unbiassed rather than a conservative lower bound.
 #'
 #' @export
-nest_confects <- function(n, pfunc, fdr=0.05, max=30.0, step=0.05) {
+nest_confects <- function(n, pfunc, fdr=0.05, max=30.0, step=0.01) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 

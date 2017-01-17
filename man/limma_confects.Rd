@@ -5,7 +5,7 @@
 \title{Confident log2 fold changes using limma's treat function, linear effects only}
 \usage{
 limma_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05, max = 30,
-  step = 0.05)
+  step = 0.01)
 }
 \arguments{
 \item{fit}{A limma MArrayLM object.}

@@ -14,10 +14,11 @@ effect_rss(coef)
 }
 \value{
 An object defining how to calculate an effect size.
-
-\code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
 }
 \description{
 This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rss, it is the root sum of squared differences from the mean.
+}
+\details{
+\code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
 }
 

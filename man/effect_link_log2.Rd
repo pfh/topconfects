@@ -13,6 +13,6 @@ effect_link_log2(effect)
 An object defining how to calculate an effect size from coefficients on a logarithmic scale.
 }
 \description{
-Differential expression analysis usually fits coefficients to log transformed values, or with a log2 link function. This function adapts an effect size object to work with such log-scale coefficients.
+Differential expression analysis usually fits coefficients to log2 transformed values, or with a log2 link function. This function adapts an effect size object to work with such log2-scale coefficients.
 }
 

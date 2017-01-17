@@ -23,8 +23,10 @@
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
+#'#' Technical note when using a non-linear effect size: Signed confects are based on TREAT-style p-values. Unsigned consfects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
+#'
 #' @export
-edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05, max=30.0, step=0.05, null="worst.case") {
+edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05, max=30.0, step=0.01, null="worst.case") {
     assert_that(is(fit, "DGEGLM"))
     assert_that((!is.null(coef)) + (!is.null(contrast)) + (!is.null(effect)) == 1)
 

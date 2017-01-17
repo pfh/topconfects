@@ -22,7 +22,7 @@ broadcast <- function(vec, n) {
 
 
 # Called from edger_confects
-edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.05) {
+edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.01) {
     assert_that(is(data, "DGEGLM"))
 
     # Mimic edgeR's shrunk coefficients
@@ -56,7 +56,8 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.05
             design,
             devi_link_log2(devi_nbinom(rep(dispersions[i], n_samples))),
             cons,
-            offset=offset, initial=initial)
+            offset=offset, initial=initial,
+            equality=effect$signed)
     }
 
     confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, effect, fdr, max, step)
@@ -84,10 +85,12 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.05
 #'
 #' @return
 #'
+#' Technical note: Signed consfects are based on TREAT-style p-values. Unsigned consfects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
+#'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0, step=0.05) {
+limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0, step=0.01) {
     # TODO: missing values
     eawp <- getEAWP(object)
     limma_fit <- lmFit(object, design) %>% eBayes()
@@ -114,7 +117,8 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0,
             design,
             devi_normal(weights[i,]),
             cons,
-            initial=initial)
+            initial=initial,
+            equality=effect$signed)
     }
 
     confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, effect, fdr, max, step)
@@ -134,6 +138,10 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0,
 
 
 # Workhorse function
+#
+# Note in fit: signed constraints should be fit with an equality constraint, unsigned with an inequality constraint
+# signed constraints use TREAT p-values
+# unsigned constraints use a standard likelihood ratio test
 nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr, max, step) {
     n_items <- length(df_residual)
 
@@ -157,7 +165,7 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
 
             if (effect_size == 0 || !effect$signed) {
                 # p=1 if ML estimate lies within H0 set
-                if (abs(effects[j]) < effect_size) next
+                if (abs(effects[j]) <= effect_size) next
 
                 h0_fit <- fit(j, pos_constraint, h1_fit$beta)
 

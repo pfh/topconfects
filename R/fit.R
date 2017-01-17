@@ -93,6 +93,40 @@ devi_link_log2 <- function(devi) {
 }
 
 
+#' Adapt an effect size object to work with coefficients estimated from log2 transformed data or with a log2 link function
+#'
+#' Differential expression analysis usually fits coefficients to log2 transformed values, or with a log2 link function. This function adapts an effect size object to work with such log2-scale coefficients.
+#'
+#' @param effect An object definining an effect size on coefficients with untransformed scale.
+#'
+#' @return
+#'
+#' An object defining how to calculate an effect size from coefficients on a logarithmic scale.
+#'
+#' @export
+effect_link_log2 <- function(effect) {
+    list(
+        signed = effect$signed,
+        df = effect$df,
+
+        calc = function(beta) effect$calc(exp(beta*ln2)),
+
+        constraint = function(effect_size) {
+            cons <- effect$constraint(effect_size)
+
+            function(beta) {
+                e <- exp(beta*ln2)
+                result <- cons(e)
+                list(
+                    score = result$score,
+                    grad = ln2 * e * result$grad
+                )
+            }
+        }
+    )
+}
+
+
 #' Simple linear contrast effect.
 #'
 #' This is included for completeness and testing. limma_confects() and edger_confects() provide a faster version of this using limma's treat and edgeR's topTreat functions.
@@ -125,13 +159,13 @@ effect_contrast <- function(contrast) {
 #'
 #' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rss, it is the root sum of squared differences from the mean.
 #'
+#' \code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
+#'
 #' @param coef The column numbers of the design matrix for the relevant coefficients.
 #'
 #' @return
 #'
 #' An object defining how to calculate an effect size.
-#'
-#' \code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
 #'
 #' @export
 effect_sd <- function(coef) {
@@ -150,8 +184,8 @@ effect_sd <- function(coef) {
                 bc <- beta[coef]
                 mbc <- mean(bc)
                 list(
-                    score = target - sum((bc-mbc)**2),
-                    grad = -2*(1-1/n)*(bc-mbc)
+                    score = sum((bc-mbc)**2) - target,
+                    grad = 2*(1-1/n)*(bc-mbc)
                 )
             }
         }
@@ -177,8 +211,8 @@ effect_rss <- function(coef) {
                 bc <- beta[coef]
                 mbc <- mean(bc)
                 list(
-                    score = target - sum((bc-mbc)**2),
-                    grad = -2*(1-1/n)*(bc-mbc)
+                    score = sum((bc-mbc)**2) - target,
+                    grad = 2*(1-1/n)*(bc-mbc)
                 )
             }
         }
@@ -190,11 +224,15 @@ effect_rss <- function(coef) {
 #'
 #' Detect a "shift of mass" between two conditions. For example expression might move later in a time series in an experimental condition vs a control. If all expression shifted to a later time in the experimental condition, this would be given an effect size of 1. Conversely if all expression shifted to an earlier time, the effect size would be -1.
 #'
+#' This can be viewed as similar to Somers' D.
+#'
+#' \code{effect_shift_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
+#'
+#' Note that this effect size is not symmetric: \code{effect_shift_log2(c(1,2),c(3,4))} and \code{effect_shift_log2(c(1,3),c(2,4))} will give different results.
+#'
 #' @param coef1 Column numbers in the design matrix for the first condition, in some meaningful order.
 #'
 #' @param coef2 Corresponding column numbers for the second condition.
-#'
-#' \code{effect_shift_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
 #'
 #' @return
 #'
@@ -229,64 +267,13 @@ effect_shift <- function(coef1, coef2) {
                 grad[coef1] <-               colSums(beta2*t(sign_mat))/b1/b2 - a/b2/(b1*b1)
                 grad[coef2] <- grad[coef2] + colSums(beta1*sign_mat)/b1/b2    - a/b1/(b2*b2)
                 list(
-                    score = a/b1/b2,
+                    score = a/b1/b2 - effect_size,
                     grad = grad
                 )
             }
         }
-
-        # constraint = function(effect_size) {
-        #     weights <- sign_mat - effect_size
-        #
-        #     function(beta) {
-        #         beta1 <- beta[coef1]
-        #         beta2 <- beta[coef2]
-        #         grad <- rep(0.0, length(beta))
-        #         grad[coef1] <-               colSums(beta2*t(weights))
-        #         grad[coef2] <- grad[coef2] + colSums(beta1*weights)
-        #         list(
-        #             score = sum(weights * outer(beta1,beta2)),
-        #             grad = grad
-        #         )
-        #     }
-        # }
     )
 }
-
-
-#' Adapt an effect size object to work with coefficients estimated from log2 transformed data or with a log2 link function
-#'
-#' Differential expression analysis usually fits coefficients to log transformed values, or with a log2 link function. This function adapts an effect size object to work with such log-scale coefficients.
-#'
-#' @param effect An object definining an effect size on coefficients with untransformed scale.
-#'
-#' @return
-#'
-#' An object defining how to calculate an effect size from coefficients on a logarithmic scale.
-#'
-#' @export
-effect_link_log2 <- function(effect) {
-    list(
-        signed = effect$signed,
-        df = effect$df,
-
-        calc = function(beta) effect$calc(exp(beta*ln2)),
-
-        constraint = function(effect_size) {
-            cons <- effect$constraint(effect_size)
-
-            function(beta) {
-                e <- exp(beta*ln2)
-                result <- cons(e)
-                list(
-                    score = result$score,
-                    grad = ln2 * e * result$grad
-                )
-            }
-        }
-    )
-}
-
 
 #' @rdname effect_shift
 #' @export
@@ -294,9 +281,131 @@ effect_shift_log2 <- function(coef1, coef2)
     effect_link_log2(effect_shift(coef1, coef2))
 
 
-constrained_fit_newton <- function(y, X, devi, cons=NULL, offset=0, initial=NULL, dtol=1e-7, ctol=1e-7, btol=1e-7) {
+#' Goodman and Kruskall's gamma, Yule's Q
+#'
+#' Goodman and Kruskall's gamma as an effect size. Yule's Q is a special case where coef1 and coef2 both have two coefficients, and is a symmetric effect size for the interaction of two experimental factors.
+#'
+#' \code{effect_gamma_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
+#'
+#' @param coef1 Column numbers in the design matrix for the first condition, in some meaningful order.
+#'
+#' @param coef2 Corresponding column numbers for the second condition.
+#'
+#' @return
+#'
+#' An object defining how to calculate an effect size.
+#'
+#' @export
+effect_gamma <- function(coef1, coef2) {
+    assert_that(length(coef1) == length(coef2))
+    n <- length(coef1)
+    sign_mat <- sign(outer(-seq_len(n),seq_len(n), `+`))
+    unsign_mat <- abs(sign_mat)
+
+    list(
+        signed = TRUE,
+        df = 1,
+
+        calc = function(beta) {
+            beta1 <- beta[coef1]
+            beta2 <- beta[coef2]
+            a <- sum(outer(beta1,beta2)*sign_mat)
+            b <- sum(outer(beta1,beta2)*unsign_mat)
+            a/b
+        },
+
+        constraint = function(effect_size) {
+            function(beta) {
+                beta1 <- beta[coef1]
+                beta2 <- beta[coef2]
+                a <- sum(outer(beta1,beta2)*sign_mat)
+                b <- sum(outer(beta1,beta2)*unsign_mat)
+                grad <- rep(0.0, length(beta))
+                grad[coef1] <-               colSums(beta2*t(sign_mat))/b - colSums(beta2*t(unsign_mat))*a/(b*b)
+                grad[coef2] <- grad[coef2] + colSums(beta1*sign_mat)/b    - colSums(beta1*unsign_mat)*a/(b*b)
+                list(
+                    score = a/b - effect_size,
+                    grad = grad
+                )
+            }
+        }
+    )
+}
+
+effect_gamma_log2 <- function(coef1, coef2)
+    effect_link_log2(effect_gamma(coef1, coef2))
+
+
+# Total Variation Distance effect size
+#
+#
+# effect_tv <- function(coef1, coef2) {
+#     assert_that(length(coef1) == length(coef2))
+#     n <- length(coef1)
+#
+#     list(
+#         signed = FALSE,
+#         df = n,
+#
+#         calc = function(beta) {
+#             dist1 <- beta[coef1]
+#             dist1 <- dist1/sum(dist1)
+#             dist2 <- beta[coef2]
+#             dist2 <- dist2/sum(dist2)
+#             sum(abs(dist2-dist1))
+#         }
+#
+#         constraint = function(effect_size) {
+#             ...
+#         }
+#     )
+# }
+
+# @rdname effect_shift
+# @export
+#effect_tv_log2 <- function(coef1, coef2)
+#    effect_link_log2(effect_tv(coef1, coef2))
+
+
+# effect_span <- function(coef) {
+#     n <- length(coef)
+#
+#     list(
+#         signed = FALSE,
+#         df = n,
+#
+#         calc = function(beta) {
+#             relevant <- beta[coef]
+#             max(relevant) - min(relevant)
+#         },
+#
+#         constraint = function(effect_size) {
+#             function(beta) {
+#                 relevant <- beta[coef]
+#                 max_relevant <- max(relevant)
+#                 min_relevant <- min(relevant)
+#
+#                 grad <- rep(0,length(beta))
+#                 which_max <-  coef[relevant == max_relevant]
+#                 grad[which_max] <- grad[which_max] + 1
+#                 which_min <- coef[relevant == min_relevant]
+#                 grad[which_min] <- grad[which_min] - 1
+#                 list(
+#                     score = max_relevant-min_relevant - effect_size,
+#                     grad = grad
+#                 )
+#             }
+#         }
+#     )
+# }
+
+
+constrained_fit_newton <- function(y, X, devi, cons=NULL, offset=0, initial=NULL, equality=TRUE, dtol=1e-7, ctol=1e-7, btol=1e-7) {
     n <- length(y)
     m <- ncol(X)
+
+    # Only supports equality constraint
+    stopifnot(is.null(cons) || equality)
 
     # Initial guess
     if (!is.null(initial))
@@ -383,7 +492,8 @@ constrained_fit_cobyla <- function(y, X, devi, cons=NULL, offset=0, initial=NULL
 
 
 
-constrained_fit_slsqp <- function(y, X, devi, cons=NULL, offset=0, initial=NULL) {
+# equality TRUE -> constraint == 0, FALSE constraint >= 0
+constrained_fit_slsqp <- function(y, X, devi, cons=NULL, offset=0, initial=NULL, equality=TRUE) {
     # Initial guess
     if (!is.null(initial))
         beta <- initial
@@ -405,7 +515,11 @@ constrained_fit_slsqp <- function(y, X, devi, cons=NULL, offset=0, initial=NULL)
             list(constraints=cons_out$score, jacobian=cons_out$grad)
         }
 
-    result <- nloptr::nloptr(beta, eval_f=f, eval_g_eq=g, opts=list(algorithm="NLOPT_LD_SLSQP", xtol_abs=1e-6))
+    opts <- list(algorithm="NLOPT_LD_SLSQP", xtol_abs=1e-6)
+    if (equality)
+        result <- nloptr::nloptr(beta, eval_f=f, eval_g_eq=g, opts=opts)
+    else
+        result <- nloptr::nloptr(beta, eval_f=f, eval_g_ineq=g, opts=opts)
 
     if (result$status <= 0)
         warning("SLSQP failed to successfully converge.")

@@ -4,7 +4,7 @@
 \alias{nest_confects}
 \title{General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR}
 \usage{
-nest_confects(n, pfunc, fdr = 0.05, max = 30, step = 0.05)
+nest_confects(n, pfunc, fdr = 0.05, max = 30, step = 0.01)
 }
 \arguments{
 \item{n}{Number of items being tested.}

@@ -12,7 +12,7 @@ params:
 ---
 
 <!--
-devtools::load_all(".") ; rmarkdown::render("vignettes/fold_change.Rmd", intermediates_dir="/tmp", output_dir="/tmp", params=list(cache=TRUE))
+devtools::load_all(".") ; rmarkdown::render("vignettes/fold_change.Rmd", intermediates_dir="/tmp", output_dir="/tmp", clean=FALSE, params=list(cache=TRUE))
 -->
 
 <style>
@@ -24,7 +24,9 @@ This document shows typical Topconfects usage.
 The first step is to load a dataset. Here, we're looking at RNA-seq data that investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental and control conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=params$cache, autodep=params$cache, fig.width=7, fig.height=6)
+knitr::opts_chunk$set(fig.width=7, fig.height=6)
+if (params$cache)
+    knitr::opts_chunk$set(cache=TRUE, autodep=TRUE, cache.path="/tmp/fold_change_cache")
 ```
 
 
@@ -42,7 +44,9 @@ data(arab)
 
 # Retrieve symbol and description for each gene
 info <- 
-    AnnotationDbi::select(org.At.tair.db::org.At.tair.db, rownames(arab), c("SYMBOL","GENENAME")) %>%
+    AnnotationDbi::select(
+        org.At.tair.db::org.At.tair.db, 
+        rownames(arab), c("SYMBOL","GENENAME")) %>%
     group_by(TAIR) %>% 
     summarize(
         SYMBOL=paste(unique(na.omit(SYMBOL)),collapse="/"), 
