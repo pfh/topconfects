@@ -8,7 +8,8 @@
 #' @importFrom edgeR glmQLFTest glmTreat topTags addPriorCount
 #' @importFrom assertthat assert_that
 #' @importFrom magrittr %>%
-#' @importFrom purrr map_dbl
+#' @importFrom purrr map_dbl map_int
+#' @importFrom memoise memoise
 #'
 NULL
 

@@ -16,7 +16,7 @@ Topconfects builds on [TREAT](http://bioinformatics.oxfordjournals.org/content/2
 
 * In an ANOVA test, we need to test multiple coefficients, and we may want to treat each group equally rather than nominating a control group. Topconfects provides `effect_sd` for this, where the effect size is the standard deviation of a set of coefficients.
 
-Topconfects contains its own implementation of `edger::glmTreat` which uses a constrained GLM fitting routine, in order to allow this. **This part is very much experimental!** The approximation that quasi-likelihood ratios are F-distributed seems quite robust, but that may be lost by adding non-linear constraints. A poorly chosen constraint might effectively shave off more degrees of freedom than intended.
+Topconfects contains its own implementation of `edgeR::glmTreat` which uses a constrained GLM fitting routine, in order to allow this. **This part is very much experimental!** The approximation that quasi-likelihood ratios are F-distributed seems quite robust, but that may be lost by adding non-linear constraints. A poorly chosen constraint might effectively shave off more degrees of freedom than intended.
 
 <br/>
 

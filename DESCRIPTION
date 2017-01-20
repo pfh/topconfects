@@ -17,7 +17,8 @@ Imports:
     ggplot2,
     limma,
     edgeR,
-    nloptr
+    nloptr,
+    memoise
 Suggests:
     NBPSeq,
     testthat,
