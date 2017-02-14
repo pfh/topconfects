@@ -5,7 +5,7 @@
 \title{Confident effect sizes using edgeR, both linear and non-linear}
 \usage{
 edger_confects(fit, coef = NULL, contrast = NULL, effect = NULL,
-  fdr = 0.05, max = 30, step = 0.01, null = "worst.case")
+  fdr = 0.05, step = 0.01, null = "worst.case")
 }
 \arguments{
 \item{fit}{An edgeR DGEGLM object.}
@@ -17,8 +17,6 @@ edger_confects(fit, coef = NULL, contrast = NULL, effect = NULL,
 \item{effect}{A non-linear effect, created with one of the effect_... functions. Use either coef or contrast or effect.}
 
 \item{fdr}{False Discovery Rate to control for.}
-
-\item{max}{Maximum log2 fold change to test for.}
 
 \item{step}{Granularity of log2 fold changes to test.}
 

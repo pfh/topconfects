@@ -22,7 +22,7 @@ broadcast <- function(vec, n) {
 
 
 # Called from edger_confects
-edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.01) {
+edger_nonlinear_confects <- function(data, effect, fdr=0.05, step=0.01) {
     assert_that(is(data, "DGEGLM"))
 
     # Mimic edgeR's shrunk coefficients
@@ -50,17 +50,17 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.01
 
     df_residual <- rep(n_samples - n_coef, n_items)
 
-    fit <- function(i, cons=NULL, initial=NULL) {
+    fit <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
         (if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
             y[i,],
             design,
             devi_link_log2(devi_nbinom(rep(dispersions[i], n_samples))),
             cons,
             offset=offset, initial=initial,
-            equality=effect$signed)
+            equality=equality)
     }
 
-    confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, effect, fdr, max, step)
+    confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, function(i) effect, fdr, step)
 
     confects$table$logCPM <- data$AveLogCPM[confects$table$index]
     confects$table$name <- rownames(data)[confects$table$index]
@@ -79,8 +79,6 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.01
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
-#' @param max Maximum log2 fold change to test for.
-#'
 #' @param step Granularity of log2 fold changes to test.
 #'
 #' @return
@@ -90,7 +88,7 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, max=30.0, step=0.01
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0, step=0.01) {
+limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01) {
     # TODO: missing values
     eawp <- getEAWP(object)
     limma_fit <- lmFit(object, design) %>% eBayes()
@@ -111,17 +109,17 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0,
 
     df_residual <- rep(n_samples - n_coef, n_items)
 
-    fit <- function(i, cons=NULL, initial=NULL) {
+    fit <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
         (if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
             y[i,],
             design,
             devi_normal(weights[i,]),
             cons,
             initial=initial,
-            equality=effect$signed)
+            equality=equality)
     }
 
-    confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, effect, fdr, max, step)
+    confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, function(i) effect, fdr, step)
 
     confects$table$AveExpr <- limma_fit$Amean[confects$table$index]
     confects$table$name <- rownames(limma_fit)[confects$table$index]
@@ -142,58 +140,65 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, max=30.0,
 # Note in fit: signed constraints should be fit with an equality constraint, unsigned with an inequality constraint
 # signed constraints use TREAT p-values
 # unsigned constraints use a standard likelihood ratio test
-nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr, max, step) {
+#
+# tech_rep can be used to declare that there is n-fold technical replication
+# -- this means less information is gained from residual deviance
+nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr, step,  tech_rep=1) {
     n_items <- length(df_residual)
+
+    tech_rep <- broadcast(tech_rep, n_items)
 
     h1_fits <- lapply(seq_len(n_items), fit)
 
-    effects <- map_dbl(h1_fits, function(item) effect$calc( item$beta ))
+    effects <- map_dbl(seq_len(n_items), function(i) effect(i)$calc( h1_fits[[i]]$beta ))
 
     #hneg1_constraint <- effect$constraint(0)
     #hneg1_fits <- lapply(seq_len(n_items), function(i) fit(i, hneg1_constraint, h1_fits[[i]]$beta))
 
     pfunc <- function(indices, effect_size) {
-        pos_constraint <- effect$constraint(effect_size)
-        if (effect_size != 0 && effect$signed)
-            neg_constraint <- effect$constraint(-effect_size)
-
         p <- rep(1, length(indices))
         for(i in seq_along(indices)) {
             j <- indices[i]
 
             h1_fit <- h1_fits[[j]]
 
-            if (effect_size == 0 || !effect$signed) {
+            # TODO: optimize when effect is constant
+            this_effect <- effect(j)
+            pos_constraint <- this_effect$constraint(effect_size)
+            if (effect_size != 0 && this_effect$signed)
+                neg_constraint <- this_effect$constraint(-effect_size)
+
+            if (effect_size == 0 || !this_effect$signed) {
                 # p=1 if ML estimate lies within H0 set
                 if (abs(effects[j]) <= effect_size) next
 
-                h0_fit <- fit(j, pos_constraint, h1_fit$beta)
+                h0_fit <- fit(j, pos_constraint, FALSE, h1_fit$beta)
 
                 p[i] <- moderated_pf(
-                    f = (h0_fit$deviance-h1_fit$deviance)/effect$df,
-                    df = effect$df,
+                    f = (h0_fit$deviance-h1_fit$deviance)/this_effect$df,
+                    df = this_effect$df,
                     s2_residual = h1_fit$deviance / df_residual[j],
-                    df_residual = df_residual[j],
+                    df_residual = df_residual[j] / tech_rep[j],
                     s2_prior = s2_prior[j],
                     df_prior = df_prior[j])
             } else {
                 # TREAT-style p values
                 # Can be < 1 even when ML estimate lies within H0 set
-                h0_fit_neg <- fit(j, neg_constraint, h1_fit$beta)
-                h0_fit_pos <- fit(j, pos_constraint, h1_fit$beta)
+                h0_fit_neg <- fit(j, neg_constraint, TRUE, h1_fit$beta)
+                h0_fit_pos <- fit(j, pos_constraint, TRUE, h1_fit$beta)
                 p[i] <- 0.5*(
                     moderated_pf(
-                        f = (h0_fit_neg$deviance-h1_fit$deviance)/effect$df,
-                        df = effect$df,
+                        f = (h0_fit_neg$deviance-h1_fit$deviance)/this_effect$df,
+                        df = this_effect$df,
                         s2_residual = h1_fit$deviance / df_residual[j],
-                        df_residual = df_residual[j],
+                        df_residual = df_residual[j] / tech_rep[j],
                         s2_prior = s2_prior[j],
                         df_prior = df_prior[j]) +
                     moderated_pf(
-                        f = (h0_fit_pos$deviance-h1_fit$deviance)/effect$df,
-                        df = effect$df,
+                        f = (h0_fit_pos$deviance-h1_fit$deviance)/this_effect$df,
+                        df = this_effect$df,
                         s2_residual = h1_fit$deviance / df_residual[j],
-                        df_residual = df_residual[j],
+                        df_residual = df_residual[j] / tech_rep[j],
                         s2_prior = s2_prior[j],
                         df_prior = df_prior[j]))
 
@@ -205,10 +210,9 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
         p
     }
 
-    confects <- nest_confects(n_items, pfunc, fdr=fdr, max=max, step=step)
+    confects <- nest_confects(n_items, pfunc, fdr=fdr, step=step)
 
-    if (effect$signed)
-        confects$table$confect <- sign(effects[confects$table$index]) * confects$table$confect
+    confects$table$confect <- sign(effects[confects$table$index]) * confects$table$confect
     confects$table$effect <- effects[confects$table$index]
     confects$h1_fits <- h1_fits
 

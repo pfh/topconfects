@@ -12,8 +12,6 @@
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
-#' @param max Maximum log2 fold change to test for.
-#'
 #' @param step Granularity of log2 fold changes to test.
 #'
 #' @return
@@ -21,7 +19,7 @@
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, max=30.0, step=0.01) {
+limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, step=0.01) {
     assert_that(is(fit, "MArrayLM"))
 
     cfit <- fit
@@ -43,7 +41,7 @@ limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, max=30.0, st
         top_treats$P.Value[i]
     }
 
-    confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
+    confects <- nest_confects(n, pfunc, fdr=fdr, step=step)
     logFC <- cfit$coefficients[confects$table$index, 1]
     confects$table$confect <- sign(logFC) * confects$table$confect
     confects$table$effect <- logFC

@@ -10,8 +10,6 @@
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
-#' @param max Maximum effect size to test for.
-#'
 #' @param step Granularity of effect sizes to test.
 #'
 #' @return A "Topconfects" object, containing a table of results and various associated information.
@@ -33,13 +31,13 @@
 #' Some wrappers around this function may add a sign to the \code{confect} column, if it makes sense to do so. They will also generally add an \code{effect} column, containing an estimate of the effect size that aims to be unbiassed rather than a conservative lower bound.
 #'
 #' @export
-nest_confects <- function(n, pfunc, fdr=0.05, max=30.0, step=0.01) {
+nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 
     mag <- 0.0
     n_active <- n
-    while(n_active > 0 && mag <= max) {
+    while(n_active > 0) {
         seq_active <- seq_len(n_active)
         p <- pfunc(indices[seq_active], mag)
         ordering <- order(p)
@@ -57,7 +55,7 @@ nest_confects <- function(n, pfunc, fdr=0.05, max=30.0, step=0.01) {
     result <- new("Topconfects", list(
         table=data.frame(rank=seq_len(n), index=indices, confect=mags),
         effect_desc = "effect size",
-        fdr=fdr, max=max, step=step, pfunc=pfunc))
+        fdr=fdr, step=step, pfunc=pfunc))
 }
 
 

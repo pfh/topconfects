@@ -4,8 +4,7 @@
 \alias{limma_nonlinear_confects}
 \title{Confident non-linear effect sizes using limma}
 \usage{
-limma_nonlinear_confects(object, design, effect, fdr = 0.05, max = 30,
-  step = 0.01)
+limma_nonlinear_confects(object, design, effect, fdr = 0.05, step = 0.01)
 }
 \arguments{
 \item{object}{An expression matrix or EList object, or anything limma's lmFit will accept.}
@@ -15,8 +14,6 @@ limma_nonlinear_confects(object, design, effect, fdr = 0.05, max = 30,
 \item{effect}{A non-linear effect, created with one of the effect_... functions.}
 
 \item{fdr}{False Discovery Rate to control for.}
-
-\item{max}{Maximum log2 fold change to test for.}
 
 \item{step}{Granularity of log2 fold changes to test.}
 }

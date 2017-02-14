@@ -4,7 +4,7 @@
 \alias{limma_confects}
 \title{Confident log2 fold changes using limma's treat function, linear effects only}
 \usage{
-limma_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05, max = 30,
+limma_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05,
   step = 0.01)
 }
 \arguments{
@@ -15,8 +15,6 @@ limma_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05, max = 30,
 \item{contrast}{Contrast to test, as per \code{glmTreat}. Use either coef or contrast, or have fit be the result of contrasts.fit.}
 
 \item{fdr}{False Discovery Rate to control for.}
-
-\item{max}{Maximum log2 fold change to test for.}
 
 \item{step}{Granularity of log2 fold changes to test.}
 }

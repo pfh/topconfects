@@ -4,7 +4,7 @@
 \alias{nest_confects}
 \title{General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR}
 \usage{
-nest_confects(n, pfunc, fdr = 0.05, max = 30, step = 0.01)
+nest_confects(n, pfunc, fdr = 0.05, step = 0.01)
 }
 \arguments{
 \item{n}{Number of items being tested.}
@@ -12,8 +12,6 @@ nest_confects(n, pfunc, fdr = 0.05, max = 30, step = 0.01)
 \item{pfunc}{A function(indices, effect_size) to calculate p-values. Indices is a subset of 1:n giving the p-values to be computed.}
 
 \item{fdr}{False Discovery Rate to control for.}
-
-\item{max}{Maximum effect size to test for.}
 
 \item{step}{Granularity of effect sizes to test.}
 }

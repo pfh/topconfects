@@ -13,8 +13,6 @@
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
-#' @param max Maximum log2 fold change to test for.
-#'
 #' @param step Granularity of log2 fold changes to test.
 #'
 #' @param null "null" parameter passed through to edger::glmTreat (if coef or contrast given). Choices are "worst.case" or "interval". Note that the default here is "worst.case", to be consistent with other functions in topconfects. This differs from the default for glmTreat.
@@ -26,12 +24,12 @@
 #' Technical note when using a non-linear effect size: Signed confects are based on TREAT-style p-values. Unsigned consfects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
 #'
 #' @export
-edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05, max=30.0, step=0.01, null="worst.case") {
+edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05, step=0.01, null="worst.case") {
     assert_that(is(fit, "DGEGLM"))
     assert_that((!is.null(coef)) + (!is.null(contrast)) + (!is.null(effect)) == 1)
 
     if (!is.null(effect))
-        confects <- edger_nonlinear_confects(fit, effect, fdr=fdr, max=max, step=step)
+        confects <- edger_nonlinear_confects(fit, effect, fdr=fdr, step=step)
     else {
         n <- nrow(fit)
 
@@ -50,7 +48,7 @@ edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05,
             top_treats$table$PValue[i]
         }
 
-        confects <- nest_confects(n, pfunc, fdr=fdr, max=max, step=step)
+        confects <- nest_confects(n, pfunc, fdr=fdr, step=step)
         confects$effect_desc <- "log2 fold change"
         logFC <- top_tags$table$logFC[confects$table$index]
         confects$table$confect <- sign(logFC) * confects$table$confect

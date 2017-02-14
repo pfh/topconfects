@@ -22,44 +22,97 @@
 #'
 #' @param group_effect A \code{function(n)} returning an effect size object for a group with \code{n} members.
 #'
+#' @param fdr False Discovery Rate to maintain.
+#'
+#' @param step Step size when calculating confident effect sizes.
+#'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
-# edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, max=30.0, step=0.01) {
-#     group_id <- factor(group_id)
-#     group_effect <- memoise(group_effect)
-#
-#     assert_that(is(fit, "DGEGLM"))
-#     assert_that(length(group_id) == nrow(fit))
-#
-#     members <- split(seq_len(nrow(fit)), group_id)
-#     members <- members[ map_int(members,length) >= 2 ]
-#     n <- length(members)
-#
-#     group_design <- function(m) {
-#         design <- fit$design
-#         zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
-#         big_design <- matrix(0,nrow=0,ncol=n*ncol(design))
-#         for(i in seq_len(m)) {
-#             big_design <- rbind(big_design,
-#                 do.call(cbind,c(
-#                     rep(list(zero_block), i-1),
-#                     list(design),
-#                     rep(list(zero_block), m-i)
-#                 ))
-#             )
-#         }
-#
-#         big_design
-#     }
-#     group_design <- memoise(group_design)
-#
-#     fit <- function(i, cons=NULL, initial=NULL) {
-#         m <- length(members[[i]])
-#         ...
-#     }
-# }
+edger_group_confects <- function(data, group_id, group_effect, fdr=0.05, step=0.01) {
+    group_id <- factor(group_id)
+    group_effect <- memoise(group_effect)
+
+    assert_that(is(data, "DGEGLM"))
+    assert_that(length(group_id) == nrow(data))
+
+    members <- split(seq_len(nrow(data)), group_id)
+    members <- members[ map_int(members,length) >= 2 ]
+    sizes <- map_int(members,length)
+    n <- length(members)
+
+    # Mimic edgeR's shrunk coefficients
+    y <- addPriorCount(data$counts, offset=data$offset, prior.count=0.125)$y
+    offset <- c(data$offset) / log(2)
+    design <- data$design
+
+    n_items <- nrow(y)
+    n_samples <- ncol(y)
+    n_coef <- ncol(design)
+    assert_that(nrow(design) == n_samples)
+    assert_that(length(offset) == n_samples)
+
+    assert_that(length(data$df.prior) == 1)
+
+    df_prior <- rep(data$df.prior, n)
+    # Hmm
+    s2_prior_item <- broadcast(data$var.prior,n_items)
+    s2_prior <- map_dbl(members, function(indices) mean(s2_prior_item[indices]))
+
+    df_residual <- sizes*(n_samples-n_coef)
+
+    dispersions <- broadcast(data$dispersion, n_items)
+
+    group_design <- function(m) {
+        zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
+        big_design <- matrix(0,nrow=0,ncol=m*ncol(design))
+        for(i in seq_len(m)) {
+            big_design <- rbind(big_design,
+                do.call(cbind,c(
+                    rep(list(zero_block), i-1),
+                    list(design),
+                    rep(list(zero_block), m-i)
+                ))
+            )
+        }
+
+        big_design
+    }
+    group_design <- memoise(group_design)
+
+    fit <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
+        m <- sizes[i]
+        this_design <- group_design(m)
+        this_y <- do.call(c, 
+            lapply(members[[i]], function(j) y[j,]))
+        this_offset <- rep(offset, m)
+        this_dispersions <- rep(
+            dispersions[members[[i]]],
+            each=ncol(y))
+
+        (if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+            this_y,
+            this_design,
+            devi_link_log2(devi_nbinom(this_dispersions)),
+            cons,
+            offset=this_offset, initial=initial,
+            equality=equality)
+    }
+
+    effect <- function(i)
+        group_effect(sizes[i])
+
+    confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, effect, fdr, step, tech_rep=sizes)
+    # Intent of tech_rep=sizes: Each *sample* only counts for one observation of the residual deviance
+
+    confects$table$name <- names(members)[confects$table$index]
+
+    confects$edger_fit <- data
+    confects$members <- members
+
+    confects
+}
 
 
 

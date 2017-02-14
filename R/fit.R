@@ -157,7 +157,7 @@ effect_contrast <- function(contrast) {
 
 #' Standard-deviation of a set of coefficients as effect size
 #'
-#' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rss, it is the root sum of squared differences from the mean.
+#' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rssm, it is the root sum of squared differences from the mean.
 #'
 #' \code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
 #'
@@ -183,9 +183,11 @@ effect_sd <- function(coef) {
             function(beta) {
                 bc <- beta[coef]
                 mbc <- mean(bc)
+                grad <- rep(0,length(coef))
+                grad[coef] <- 2*(1-1/n)*(bc-mbc)                
                 list(
                     score = sum((bc-mbc)**2) - target,
-                    grad = 2*(1-1/n)*(bc-mbc)
+                    grad = grad
                 )
             }
         }
@@ -195,7 +197,7 @@ effect_sd <- function(coef) {
 
 #' @rdname effect_sd
 #' @export
-effect_rss <- function(coef) {
+effect_rssm <- function(coef) {
     n <- length(coef)
     assert_that(n > 1)   #n=2 case may be problematic
 
@@ -210,9 +212,35 @@ effect_rss <- function(coef) {
             function(beta) {
                 bc <- beta[coef]
                 mbc <- mean(bc)
+                grad <- rep(0, length(beta))
+                grad[coef] <- 2*(1-1/n)*(bc-mbc)
                 list(
                     score = sum((bc-mbc)**2) - target,
-                    grad = 2*(1-1/n)*(bc-mbc)
+                    grad = grad
+                )
+            }
+        }
+    )
+}
+
+
+#' @export
+effect_rss <- function(coef) {
+    list(
+        signed = FALSE,
+        df = length(coef),
+
+        calc = function(beta) sqrt(sum( beta[coef]**2 )),
+
+        constraint = function(effect_size) {
+            target <- effect_size**2
+            function(beta) {
+                bc <- beta[coef]
+                grad <- rep(0, length(beta))
+                grad[coef] <- 2*bc
+                list(
+                    score = sum(bc**2) - target,
+                    grad = grad
                 )
             }
         }
