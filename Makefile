@@ -1,6 +1,8 @@
 
-quick :
-	Rscript -e "devtools::check(build_args=c('--no-build-vignettes'))"
+quick : document
+	R CMD build --no-build-vignettes .
+	R CMD check --no-build-vignettes topconfects_*.tar.gz
+	rm topconfects_*.tar.gz
 
 check :
 	Rscript -e "devtools::check()"

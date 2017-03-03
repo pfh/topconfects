@@ -155,11 +155,45 @@ effect_contrast <- function(contrast) {
 }
 
 
+#' Ratio of contrasts effect.
+#'
+#' Ratio of two contrasts, i.e. \code{sum(contrast1*beta)/sum(contrast2*beta)}.
+#'
+#' @param contrast1 First contrast weights, a vector with the same length as the number of columns in the design matrix.
+#'
+#' @param contrast2 Second contrast weights, a vector with the same length as the number of columns in the design matrix.
+#'
+#' \code{sum(contrast2*beta)} should always produce a positive value.
+#'
+#' @return
+#'
+#' An object defining how to calculate an effect size.
+#' 
+#' @export
+effect_contrast_ratio <- function(contrast1, contrast2) {
+    list(
+        signed = TRUE,
+        df = 1,
+
+        calc = function(beta) sum(beta * contrast1) / sum(beta * contrast2),
+
+        constraint = function(effect_size) {
+            # sum(contrast1*beta) - effect_size*sum(contrast2*beta)
+            weights <- contrast1 - effect_size*contrast2
+            function(beta) list(
+                score = sum(weights*beta),
+                grad = weights
+            )
+        }
+    )
+}
+
+
 #' Standard-deviation of a set of coefficients as effect size
 #'
-#' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rssm, it is the root sum of squared differences from the mean.
+#' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rssm, it is the root sum of squared differences from the mean. For effect_rss, it is simply the square root of the sum of squared coefficients.
 #'
-#' \code{effect_rss} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
+#' \code{effect_rssm} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
 #'
 #' @param coef The column numbers of the design matrix for the relevant coefficients.
 #'
@@ -224,6 +258,7 @@ effect_rssm <- function(coef) {
 }
 
 
+#' @rdname effect_sd
 #' @export
 effect_rss <- function(coef) {
     list(
@@ -362,6 +397,7 @@ effect_gamma <- function(coef1, coef2) {
 
 effect_gamma_log2 <- function(coef1, coef2)
     effect_link_log2(effect_gamma(coef1, coef2))
+
 
 
 # Total Variation Distance effect size

@@ -4,9 +4,11 @@
 \alias{edger_group_confects}
 \title{Group confects (differential exon usage, etc)}
 \usage{
-edger_group_confects(data, group_id, group_effect, fdr = 0.05, step = 0.01)
+edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01)
 }
 \arguments{
+\item{fit}{An edgeR DGEGLM object.}
+
 \item{group_id}{A factor of length \code{nrow(fit)}, assigning items to groups (eg genes).}
 
 \item{group_effect}{A \code{function(n)} returning an effect size object for a group with \code{n} members.}
@@ -14,8 +16,6 @@ edger_group_confects(data, group_id, group_effect, fdr = 0.05, step = 0.01)
 \item{fdr}{False Discovery Rate to maintain.}
 
 \item{step}{Step size when calculating confident effect sizes.}
-
-\item{fit}{An edgeR DGEGLM object.}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
@@ -30,4 +30,3 @@ Groups with less than two members will be ignored.
 
 To construct a group design matrix, the design from \code{fit} will be repeated in a block diagonal matrix.
 }
-

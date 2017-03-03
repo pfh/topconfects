@@ -30,22 +30,22 @@
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
-edger_group_confects <- function(data, group_id, group_effect, fdr=0.05, step=0.01) {
+edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01) {
     group_id <- factor(group_id)
     group_effect <- memoise(group_effect)
 
-    assert_that(is(data, "DGEGLM"))
-    assert_that(length(group_id) == nrow(data))
+    assert_that(is(fit, "DGEGLM"))
+    assert_that(length(group_id) == nrow(fit))
 
-    members <- split(seq_len(nrow(data)), group_id)
+    members <- split(seq_len(nrow(fit)), group_id)
     members <- members[ map_int(members,length) >= 2 ]
     sizes <- map_int(members,length)
     n <- length(members)
 
     # Mimic edgeR's shrunk coefficients
-    y <- addPriorCount(data$counts, offset=data$offset, prior.count=0.125)$y
-    offset <- c(data$offset) / log(2)
-    design <- data$design
+    y <- addPriorCount(fit$counts, offset=fit$offset, prior.count=0.125)$y
+    offset <- c(fit$offset) / log(2)
+    design <- fit$design
 
     n_items <- nrow(y)
     n_samples <- ncol(y)
@@ -53,16 +53,16 @@ edger_group_confects <- function(data, group_id, group_effect, fdr=0.05, step=0.
     assert_that(nrow(design) == n_samples)
     assert_that(length(offset) == n_samples)
 
-    assert_that(length(data$df.prior) == 1)
+    assert_that(length(fit$df.prior) == 1)
 
-    df_prior <- rep(data$df.prior, n)
+    df_prior <- rep(fit$df.prior, n)
     # Hmm
-    s2_prior_item <- broadcast(data$var.prior,n_items)
+    s2_prior_item <- broadcast(fit$var.prior,n_items)
     s2_prior <- map_dbl(members, function(indices) mean(s2_prior_item[indices]))
 
     df_residual <- sizes*(n_samples-n_coef)
 
-    dispersions <- broadcast(data$dispersion, n_items)
+    dispersions <- broadcast(fit$dispersion, n_items)
 
     group_design <- function(m) {
         zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
@@ -81,7 +81,7 @@ edger_group_confects <- function(data, group_id, group_effect, fdr=0.05, step=0.
     }
     group_design <- memoise(group_design)
 
-    fit <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
+    fit_features <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
         m <- sizes[i]
         this_design <- group_design(m)
         this_y <- do.call(c, 
@@ -103,12 +103,13 @@ edger_group_confects <- function(data, group_id, group_effect, fdr=0.05, step=0.
     effect <- function(i)
         group_effect(sizes[i])
 
-    confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, effect, fdr, step, tech_rep=sizes)
+    confects <- nonlinear_confects(
+        df_residual, s2_prior, df_prior, fit_features, effect, fdr, step, tech_rep=sizes)
     # Intent of tech_rep=sizes: Each *sample* only counts for one observation of the residual deviance
 
     confects$table$name <- names(members)[confects$table$index]
 
-    confects$edger_fit <- data
+    confects$edger_fit <- fit
     confects$members <- members
 
     confects
