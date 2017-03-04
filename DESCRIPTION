@@ -34,5 +34,5 @@ License: LGPL-2.1 | file LICENSE
 URL: https://github.com/pfh/topconfects
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 5.0.1
 VignetteBuilder: knitr

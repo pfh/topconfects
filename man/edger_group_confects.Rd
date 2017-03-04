@@ -30,3 +30,4 @@ Groups with less than two members will be ignored.
 
 To construct a group design matrix, the design from \code{fit} will be repeated in a block diagonal matrix.
 }
+

@@ -172,7 +172,7 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
                 # p=1 if ML estimate lies within H0 set
                 if (abs(effects[j]) <= effect_size) next
 
-                h0_fit <- fit(j, pos_constraint, FALSE, h1_fit$beta)
+                h0_fit <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
 
                 p[i] <- moderated_pf(
                     f = (h0_fit$deviance-h1_fit$deviance)/this_effect$df,
@@ -184,8 +184,8 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
             } else {
                 # TREAT-style p values
                 # Can be < 1 even when ML estimate lies within H0 set
-                h0_fit_neg <- fit(j, neg_constraint, TRUE, h1_fit$beta)
-                h0_fit_pos <- fit(j, pos_constraint, TRUE, h1_fit$beta)
+                h0_fit_neg <- fit(j, neg_constraint, this_effect$signed, h1_fit$beta)
+                h0_fit_pos <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
                 p[i] <- 0.5*(
                     moderated_pf(
                         f = (h0_fit_neg$deviance-h1_fit$deviance)/this_effect$df,

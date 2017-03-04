@@ -42,6 +42,8 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     sizes <- map_int(members,length)
     n <- length(members)
 
+    logCPM <- map_dbl(members,function(items) log2(sum(2^fit$AveLogCPM[items])))
+
     # Mimic edgeR's shrunk coefficients
     y <- addPriorCount(fit$counts, offset=fit$offset, prior.count=0.125)$y
     offset <- c(fit$offset) / log(2)
@@ -91,7 +93,8 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
             dispersions[members[[i]]],
             each=ncol(y))
 
-        (if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        #(if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        constrained_fit_slsqp(
             this_y,
             this_design,
             devi_link_log2(devi_nbinom(this_dispersions)),
@@ -107,6 +110,7 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
         df_residual, s2_prior, df_prior, fit_features, effect, fdr, step, tech_rep=sizes)
     # Intent of tech_rep=sizes: Each *sample* only counts for one observation of the residual deviance
 
+    confects$table$logCPM <- logCPM[confects$table$index]
     confects$table$name <- names(members)[confects$table$index]
 
     confects$edger_fit <- fit

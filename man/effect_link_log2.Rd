@@ -15,3 +15,4 @@ An object defining how to calculate an effect size from coefficients on a logari
 \description{
 Differential expression analysis usually fits coefficients to log2 transformed values, or with a log2 link function. This function adapts an effect size object to work with such log2-scale coefficients.
 }
+
