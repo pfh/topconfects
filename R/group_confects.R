@@ -30,6 +30,7 @@
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
+#' @export
 edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01) {
     group_id <- factor(group_id)
     group_effect <- memoise(group_effect)

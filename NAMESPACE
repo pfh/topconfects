@@ -3,6 +3,7 @@
 export(confects_plot)
 export(confects_plot_me)
 export(edger_confects)
+export(edger_group_confects)
 export(effect_contrast)
 export(effect_contrast_ratio)
 export(effect_gamma)
