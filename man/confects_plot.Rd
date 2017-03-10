@@ -17,4 +17,3 @@ A ggplot2 object. Working non-interactively, you must print() this for it to be 
 \description{
 Top confident effect sizes plot
 }
-

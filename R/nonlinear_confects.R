@@ -160,6 +160,10 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
         for(i in seq_along(indices)) {
             j <- indices[i]
 
+            # p-value of 1 if ML H1 lies within H0 set
+            if (abs(effects[j]) < effect_size)
+                next
+
             h1_fit <- h1_fits[[j]]
 
             # TODO: optimize when effect is constant
@@ -183,7 +187,8 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
                     df_prior = df_prior[j])
             } else {
                 # TREAT-style p values
-                # Can be < 1 even when ML estimate lies within H0 set
+                # The explanation for why this works is rather more complicated than the
+                # actual code.
                 h0_fit_neg <- fit(j, neg_constraint, this_effect$signed, h1_fit$beta)
                 h0_fit_pos <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
                 p[i] <- 0.5*(
@@ -202,8 +207,11 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
                         s2_prior = s2_prior[j],
                         df_prior = df_prior[j]))
 
-                if (abs(effects[j]) < effect_size)
-                    p[i] <- 1 - p[i]
+                # TREAT can give p<1 even when ML H1 estimate lies within H0 set
+                # There seems no practical use for this, so topconfects just gives p=1 in this case.
+                # It might be achieved here with:
+                #if (abs(effects[j]) < effect_size)
+                #    p[i] <- 1 - p[i]
             }
         }
 

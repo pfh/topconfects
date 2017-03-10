@@ -25,4 +25,3 @@ See \code{\link{nest_confects}} for details of how to interpret the result.
 \description{
 Confident non-linear effect sizes using limma
 }
-

@@ -162,7 +162,7 @@ show_stamps(rownames(top$table), c("none", "salt"))
 
 The top results by p-value are rather hit-and-miss in terms of a substantial interaction effect.
 
-Note: As [Di Cook](http://dicook.github.io/) might point out, with 520 significant results it would not take long to manually examine all of them. This would only require examining 21 figures such as the one shown above.
+Note: Taking a leaf out of [Di Cook's](http://dicook.github.io/) playbook, with 520 significant results it would not take long to manually examine all of them. This would only require examining 21 figures such as the one shown above.
 
 
 ## Linear confects
