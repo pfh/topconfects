@@ -20,6 +20,11 @@ broadcast <- function(vec, n) {
     vec
 }
 
+# Division with a/0=0
+divide0 <- function(a,b) {
+    if (b == 0) return(0)
+    a/b
+}
 
 # Called from edger_confects
 edger_nonlinear_confects <- function(data, effect, fdr=0.05, step=0.01) {
@@ -181,7 +186,7 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
                 p[i] <- moderated_pf(
                     f = (h0_fit$deviance-h1_fit$deviance)/this_effect$df,
                     df = this_effect$df,
-                    s2_residual = h1_fit$deviance / df_residual[j],
+                    s2_residual = divide0(h1_fit$deviance, df_residual[j]),
                     df_residual = df_residual[j] / tech_rep[j],
                     s2_prior = s2_prior[j],
                     df_prior = df_prior[j])
@@ -195,14 +200,14 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
                     moderated_pf(
                         f = (h0_fit_neg$deviance-h1_fit$deviance)/this_effect$df,
                         df = this_effect$df,
-                        s2_residual = h1_fit$deviance / df_residual[j],
+                        s2_residual = divide0(h1_fit$deviance, df_residual[j]),
                         df_residual = df_residual[j] / tech_rep[j],
                         s2_prior = s2_prior[j],
                         df_prior = df_prior[j]) +
                     moderated_pf(
                         f = (h0_fit_pos$deviance-h1_fit$deviance)/this_effect$df,
                         df = this_effect$df,
-                        s2_residual = h1_fit$deviance / df_residual[j],
+                        s2_residual = divide0(h1_fit$deviance, df_residual[j]),
                         df_residual = df_residual[j] / tech_rep[j],
                         s2_prior = s2_prior[j],
                         df_prior = df_prior[j]))

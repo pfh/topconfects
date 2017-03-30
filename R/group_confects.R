@@ -26,12 +26,14 @@
 #'
 #' @param step Step size when calculating confident effect sizes.
 #'
+#' @param design The design matrix is usually taken from \code{fit}, however it may be overridden with this parameter. Note that dispersion estimates and df.prior are taken from \code{fit}. So you may estimate dispersions with a simpler model than is specified here, in order to at least obtain pessimistic confects when you lack replicates.
+#' 
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01) {
+edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01, design=NULL) {
     group_id <- factor(group_id)
     group_effect <- memoise(group_effect)
 
@@ -48,7 +50,8 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     # Mimic edgeR's shrunk coefficients
     y <- addPriorCount(fit$counts, offset=fit$offset, prior.count=0.125)$y
     offset <- c(fit$offset) / log(2)
-    design <- fit$design
+    if (is.null(design))
+        design <- fit$design
 
     n_items <- nrow(y)
     n_samples <- ncol(y)
