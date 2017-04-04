@@ -4,7 +4,8 @@
 \alias{edger_group_confects}
 \title{Group confects (differential exon usage, etc)}
 \usage{
-edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01)
+edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01,
+  design = NULL)
 }
 \arguments{
 \item{fit}{An edgeR DGEGLM object.}
@@ -16,6 +17,8 @@ edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01)
 \item{fdr}{False Discovery Rate to maintain.}
 
 \item{step}{Step size when calculating confident effect sizes.}
+
+\item{design}{The design matrix is usually taken from \code{fit}, however it may be overridden with this parameter. Note that dispersion estimates and df.prior are taken from \code{fit}. So you may estimate dispersions with a simpler model than is specified here, in order to at least obtain pessimistic confects when you lack replicates.}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.

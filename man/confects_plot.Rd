@@ -4,16 +4,21 @@
 \alias{confects_plot}
 \title{Top confident effect sizes plot}
 \usage{
-confects_plot(confects, n = 50)
+confects_plot(confects, n = 50, limits = NULL)
 }
 \arguments{
 \item{confects}{A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.}
 
 \item{n}{Number if items to show.}
+
+\item{limits}{c(lower, upper) limits on x-axis.}
 }
 \value{
 A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
 }
 \description{
-Top confident effect sizes plot
+Create a ggplot2 object showing the confect, effect, and average expression level of top features in a Topconfects object.
+}
+\details{
+For each gene, the estimated effect is shown as a dot. The confidence bound is shown as a line to positive or negative infinity, showing the set of non-rejected effect sizes for the feature.
 }

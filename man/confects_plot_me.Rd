@@ -13,5 +13,5 @@ confects_plot_me(confects)
 A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
 }
 \description{
-Like plotMD in limma, but shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in white). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
+Like plotMD in limma, but shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in grey). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
 }

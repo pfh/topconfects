@@ -1,0 +1,54 @@
+---
+title: Test properties of edgeR-based routines
+---
+
+```{r}
+library(tidyverse)
+library(edgeR)
+devtools::load_all("..")
+
+n <- 100
+folds <- seq(-2,2,length.out=n)
+row_means <- runif(n, min=0, max=5)
+lib_scale <- c(1,2,3,4)
+means <- 2^(outer(folds, c(-1,-1,1,1))) * row_means * rep(lib_scale,each=n)
+counts <- rnbinom(length(means), mu=means, size=1/0.1)
+dim(counts) <- dim(means) 
+
+counts
+colSums(counts)
+
+design <- cbind(c(1,1,0,0), c(0,0,1,1))
+
+y <- DGEList(counts) %>%
+    calcNormFactors() %>%
+    estimateDisp(design)
+
+fit <- glmQLFit(y, design)
+
+fit$df.prior
+
+# Using edgeR's glmTreat
+confects <- edger_confects(fit, contrast=c(-1,1))
+# Using topconfects TREAT-like method
+confects_nl <- edger_confects(fit, effect=effect_contrast(c(-1,1)))
+
+confects
+confects_nl
+
+# Compare ranking
+plot(order(confects$table$index), order(confects_nl$table$index))
+```
+
+Topconfects TREAT-like and edgeR TREAT p values should be similar. Topconfects p values will be slightly larger, since it uses a method that also determines the sign of the effect. Topconfects does not attempt to compute p values where the |estimate| is less than the specified effect size, so these are all set to 1.
+
+```{r}
+for(lfc in c(0.5, 1.0, 2.0)) {
+    p <- confects$pfunc(1:n, lfc)
+    p_nl <- confects_nl$pfunc(1:n, lfc)
+    plot(p, p_nl, main=paste("lfc",lfc))
+    abline(0,1)
+}
+```
+
+

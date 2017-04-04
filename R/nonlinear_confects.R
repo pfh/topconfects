@@ -12,6 +12,70 @@ moderated_pf <- function(f, df, s2_residual, df_residual, s2_prior, df_prior) {
     return( pf(f/s2_post, df1=df, df2=df_post, lower.tail=FALSE) )
 }
 
+# Note: this function is not vectorized
+sign_deciding_p <- function(t1, t2, df, iters=10) {
+    # This is for a test similar to TREAT,
+    # however it decides the sign of a fold change
+    # in addition to ensuring it has larger than some 
+    # absolute magnitude.
+
+    # In the Empirical Bayes context,
+    # errors are believed to follow a t distribution with known parameters.
+
+    # t1 is t statistic from effect=0
+    # t2 is t statistic from effect=H0 upper bound
+    # Assumes t1 and t2 are positive and t1 >= t2
+
+    # For t1 similar to t2, behaves like a two-sided test (confidence interval)
+    # For t1 much larger than t2, behaves like a one-sided test
+
+    # We are solving for false-positive probability alpha
+    # alpha = 1 - (pt(t2) - pt(-t1+t2+qt(alpha/2)))
+    #
+    #      0    effect/se   estimate/se
+    #      *         *           *
+    #       --------------------> t1
+    #                 ----------> t2
+    #   <-- t3=qt(alpha/2)
+    #  |-------------------------| confidence interval /se
+    #                              at an alpha that just includes estimate
+    #
+    #  The diagram above is a vertical slice of:
+    #
+    #           estimate
+    #              ^        # acceptance region     
+    #              |      ###
+    #                   #####
+    #                ########  
+    #     ###################
+    #     #########0######### -> true effect size
+    #     ###################
+    #     ########
+    #     #####
+    #     ### 
+    #     # 
+    #
+    # Resultant confidence intervals are horizontal slices of the above.
+    # Hence possible outcomes are:
+    #    - all effect sizes are accepted (if estimate in [t3,-t3])
+    #    - effect sizes larger than a positive amount are accepted
+    #    - effect sizes smaller than a negative amount are accepted
+
+    # Newton's method iteration
+    upper_p_t2 <- pt(t2,df, lower.tail=FALSE)
+    alpha <- upper_p_t2
+    for(i in seq_len(iters)) {
+        t3 <- qt(alpha/2,df)
+        if (t3 == -Inf)
+            break
+        alpha <- alpha +
+            (upper_p_t2 + pt(-t1+t2+t3,df) - alpha) /
+            (1 - 0.5*exp(dt(-t1+t2+t3,df,log=TRUE)-dt(t3,df,log=TRUE)))
+    }
+
+    alpha
+}
+
 
 broadcast <- function(vec, n) {
     names(vec) <- NULL
@@ -56,7 +120,8 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, step=0.01) {
     df_residual <- rep(n_samples - n_coef, n_items)
 
     fit <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
-        (if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        #(if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        constrained_fit_slsqp(
             y[i,],
             design,
             devi_link_log2(devi_nbinom(rep(dispersions[i], n_samples))),
@@ -115,7 +180,8 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01
     df_residual <- rep(n_samples - n_coef, n_items)
 
     fit <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
-        (if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        #(if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        constrained_fit_slsqp(
             y[i,],
             design,
             devi_normal(weights[i,]),
@@ -127,7 +193,10 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01
     confects <- nonlinear_confects(df_residual, s2_prior, df_prior, fit, function(i) effect, fdr, step)
 
     confects$table$AveExpr <- limma_fit$Amean[confects$table$index]
-    confects$table$name <- rownames(limma_fit)[confects$table$index]
+    if (!is.null(rownames(limma_fit)))
+        confects$table$name <- rownames(limma_fit)[confects$table$index]
+    else
+        confects$table$name <- as.character(confects$table$index)
 
     confects$object <- object
     confects$limma_fit <- limma_fit
@@ -157,8 +226,11 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
 
     effects <- map_dbl(seq_len(n_items), function(i) effect(i)$calc( h1_fits[[i]]$beta ))
 
-    #hneg1_constraint <- effect$constraint(0)
-    #hneg1_fits <- lapply(seq_len(n_items), function(i) fit(i, hneg1_constraint, h1_fits[[i]]$beta))
+    zero_fits <- lapply(seq_len(n_items), function(i) {
+        this_effect <- effect(i)
+        zero_constraint <- this_effect$constraint(0)
+        fit(i, zero_constraint, this_effect$signed, h1_fits[[i]]$beta)
+    })
 
     pfunc <- function(indices, effect_size) {
         p <- rep(1, length(indices))
@@ -166,57 +238,81 @@ nonlinear_confects <- function(df_residual, s2_prior, df_prior, fit, effect, fdr
             j <- indices[i]
 
             # p-value of 1 if ML H1 lies within H0 set
-            if (abs(effects[j]) < effect_size)
+            if (abs(effects[j]) <= effect_size)
                 next
 
+            zero_fit <- zero_fits[[j]]
             h1_fit <- h1_fits[[j]]
 
             # TODO: optimize when effect is constant
             this_effect <- effect(j)
-            pos_constraint <- this_effect$constraint(effect_size)
-            if (effect_size != 0 && this_effect$signed)
-                neg_constraint <- this_effect$constraint(-effect_size)
+            #pos_constraint <- this_effect$constraint(effect_size)
+            #if (effect_size != 0 && this_effect$signed)
+            #    neg_constraint <- this_effect$constraint(-effect_size)
 
             if (effect_size == 0 || !this_effect$signed) {
-                # p=1 if ML estimate lies within H0 set
-                if (abs(effects[j]) <= effect_size) next
-
-                h0_fit <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
+                #h0_fit <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
 
                 p[i] <- moderated_pf(
-                    f = (h0_fit$deviance-h1_fit$deviance)/this_effect$df,
+                    f = (zero_fit$deviance-h1_fit$deviance)/this_effect$df,
                     df = this_effect$df,
                     s2_residual = divide0(h1_fit$deviance, df_residual[j]),
                     df_residual = df_residual[j] / tech_rep[j],
                     s2_prior = s2_prior[j],
                     df_prior = df_prior[j])
             } else {
-                # TREAT-style p values
-                # The explanation for why this works is rather more complicated than the
-                # actual code.
-                h0_fit_neg <- fit(j, neg_constraint, this_effect$signed, h1_fit$beta)
-                h0_fit_pos <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
-                p[i] <- 0.5*(
-                    moderated_pf(
-                        f = (h0_fit_neg$deviance-h1_fit$deviance)/this_effect$df,
-                        df = this_effect$df,
-                        s2_residual = divide0(h1_fit$deviance, df_residual[j]),
-                        df_residual = df_residual[j] / tech_rep[j],
-                        s2_prior = s2_prior[j],
-                        df_prior = df_prior[j]) +
-                    moderated_pf(
-                        f = (h0_fit_pos$deviance-h1_fit$deviance)/this_effect$df,
-                        df = this_effect$df,
-                        s2_residual = divide0(h1_fit$deviance, df_residual[j]),
-                        df_residual = df_residual[j] / tech_rep[j],
-                        s2_prior = s2_prior[j],
-                        df_prior = df_prior[j]))
+                constraint <- this_effect$constraint(effect_size * sign(effects[j]))
+                h0_fit <- fit(j, constraint, this_effect$signed, h1_fit$beta)
 
-                # TREAT can give p<1 even when ML H1 estimate lies within H0 set
-                # There seems no practical use for this, so topconfects just gives p=1 in this case.
-                # It might be achieved here with:
-                #if (abs(effects[j]) < effect_size)
-                #    p[i] <- 1 - p[i]
+                zero_dev <- zero_fit$deviance
+                h0_dev <- h0_fit$deviance
+                h1_dev <- h1_fit$deviance
+
+                # Should never happen,
+                # but maybe right on the boundary numerical errors happen.
+                h0_dev <- min(h0_dev, zero_dev)
+                h1_dev <- min(h1_dev, h0_dev)
+
+                if (df_prior[j] == Inf) {
+                    df <- Inf
+                    s2 <- s2_prior[j]
+                } else {
+                    df <- df_prior[j] + df_residual[j]/tech_rep[j]
+                    s2 <- (s2_prior[j]*df_prior[j] + h1_dev/tech_rep[j]) / df
+                }
+
+                t1 <- sqrt((zero_dev-h1_dev)/s2)
+                t2 <- sqrt((h0_dev-h1_dev)/s2)
+
+                p[i] <- sign_deciding_p(t1, t2, df)
+
+
+                # # TREAT-style p values
+                # # The explanation for why this works is rather more complicated than the
+                # # actual code.
+                # h0_fit_neg <- fit(j, neg_constraint, this_effect$signed, h1_fit$beta)
+                # h0_fit_pos <- fit(j, pos_constraint, this_effect$signed, h1_fit$beta)
+                # p[i] <- 0.5*(
+                #     moderated_pf(
+                #         f = (h0_fit_neg$deviance-h1_fit$deviance)/this_effect$df,
+                #         df = this_effect$df,
+                #         s2_residual = divide0(h1_fit$deviance, df_residual[j]),
+                #         df_residual = df_residual[j] / tech_rep[j],
+                #         s2_prior = s2_prior[j],
+                #         df_prior = df_prior[j]) +
+                #     moderated_pf(
+                #         f = (h0_fit_pos$deviance-h1_fit$deviance)/this_effect$df,
+                #         df = this_effect$df,
+                #         s2_residual = divide0(h1_fit$deviance, df_residual[j]),
+                #         df_residual = df_residual[j] / tech_rep[j],
+                #         s2_prior = s2_prior[j],
+                #         df_prior = df_prior[j]))
+
+                # # TREAT can give p<1 even when ML H1 estimate lies within H0 set
+                # # There seems no practical use for this, so topconfects just gives p=1 in this case.
+                # # It might be achieved here with:
+                # #if (abs(effects[j]) < effect_size)
+                # #    p[i] <- 1 - p[i]
             }
         }
 

@@ -47,7 +47,10 @@ limma_confects <- function(fit, coef=NULL, contrast=NULL, fdr=0.05, step=0.01) {
     confects$table$effect <- logFC
 
     confects$table$AveExpr <- cfit$Amean[confects$table$index]
-    confects$table$name <- rownames(cfit)[confects$table$index]
+    if (!is.null(rownames(cfit)))
+        confects$table$name <- rownames(cfit)[confects$table$index]
+    else
+        confects$table$name <- as.character(confects$table$index)
     confects$effect_desc <- "log2 fold change"
 
     confects$limma_fit <- fit

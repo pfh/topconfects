@@ -464,95 +464,95 @@ effect_gamma_log2 <- function(coef1, coef2)
 # }
 
 
-constrained_fit_newton <- function(y, X, devi, cons=NULL, offset=0, initial=NULL, equality=TRUE, dtol=1e-7, ctol=1e-7, btol=1e-7) {
-    n <- length(y)
-    m <- ncol(X)
+# constrained_fit_newton <- function(y, X, devi, cons=NULL, offset=0, initial=NULL, equality=TRUE, dtol=1e-7, ctol=1e-7, btol=1e-7) {
+#     n <- length(y)
+#     m <- ncol(X)
 
-    # Only supports equality constraint
-    stopifnot(is.null(cons) || equality)
+#     # Only supports equality constraint
+#     stopifnot(is.null(cons) || equality)
 
-    # Initial guess
-    if (!is.null(initial))
-        beta <- initial
-    else {
-        beta <- qr.coef(qr(X), devi$y_to_x(y) - offset)
-        beta[is.na(beta)] <- 0.0
-    }
+#     # Initial guess
+#     if (!is.null(initial))
+#         beta <- initial
+#     else {
+#         beta <- qr.coef(qr(X), devi$y_to_x(y) - offset)
+#         beta[is.na(beta)] <- 0.0
+#     }
 
-    iters <- 0
-    pred <- c(X %*% beta) + offset
-    out <- devi$devi2(pred,y)
-    value <- sum(out$devi)
-    well_constrained <- FALSE
-    repeat {
-        C <- colSums(out$devi_x*X)
-        Q <- t(X) %*% (out$devi_xx*X)
+#     iters <- 0
+#     pred <- c(X %*% beta) + offset
+#     out <- devi$devi2(pred,y)
+#     value <- sum(out$devi)
+#     well_constrained <- FALSE
+#     repeat {
+#         C <- colSums(out$devi_x*X)
+#         Q <- t(X) %*% (out$devi_xx*X)
 
-        last_well_constrained <- well_constrained
-        well_constrained <- TRUE
-        if (!is.null(cons)) {
-            cons_out <- cons(beta)
+#         last_well_constrained <- well_constrained
+#         well_constrained <- TRUE
+#         if (!is.null(cons)) {
+#             cons_out <- cons(beta)
 
-            scale <- sqrt(sum(cons_out$grad*cons_out$grad))
-            cstep <- cons_out$score / scale
-            if (abs(cstep) > ctol) well_constrained <- FALSE
+#             scale <- sqrt(sum(cons_out$grad*cons_out$grad))
+#             cstep <- cons_out$score / scale
+#             if (abs(cstep) > ctol) well_constrained <- FALSE
 
-            C <- c(C, cstep)
-            Q <- cbind(rbind(Q,cons_out$grad / scale),c(cons_out$grad / scale,0))
-        }
+#             C <- c(C, cstep)
+#             Q <- cbind(rbind(Q,cons_out$grad / scale),c(cons_out$grad / scale,0))
+#         }
 
-        step <- solve(Q,C)[seq_len(m)]
-        beta <- beta - step
+#         step <- solve(Q,C)[seq_len(m)]
+#         beta <- beta - step
 
-        pred <- c(X %*% beta) + offset
-        out <- devi$devi2(pred,y)
-        old_value <- value
-        value <- sum(out$devi)
-        iters <- iters + 1
+#         pred <- c(X %*% beta) + offset
+#         out <- devi$devi2(pred,y)
+#         old_value <- value
+#         value <- sum(out$devi)
+#         iters <- iters + 1
 
-        if (last_well_constrained &&
-            well_constrained &&
-            all(abs(step) < btol) &&
-            value <= old_value+dtol) break
+#         if (last_well_constrained &&
+#             well_constrained &&
+#             all(abs(step) < btol) &&
+#             value <= old_value+dtol) break
 
-        if (iters >= 100) {
-            warning("Failed to converge after 100 iterations.")
-            break
-        }
-    }
+#         if (iters >= 100) {
+#             warning("Failed to converge after 100 iterations.")
+#             break
+#         }
+#     }
 
-    list(beta=beta, deviance=value, iters=iters)
-}
+#     list(beta=beta, deviance=value, iters=iters)
+# }
 
 
 
-constrained_fit_cobyla <- function(y, X, devi, cons=NULL, offset=0, initial=NULL) {
-    # Initial guess
-    if (!is.null(initial))
-        beta <- initial
-    else {
-        beta <- qr.coef(qr(X), devi$y_to_x(y) - offset)
-        beta[is.na(beta)] <- 0.0
-    }
+# constrained_fit_cobyla <- function(y, X, devi, cons=NULL, offset=0, initial=NULL) {
+#     # Initial guess
+#     if (!is.null(initial))
+#         beta <- initial
+#     else {
+#         beta <- qr.coef(qr(X), devi$y_to_x(y) - offset)
+#         beta[is.na(beta)] <- 0.0
+#     }
 
-    f <- function(beta)
-        sum(devi$devi(c(X %*% beta) + offset, y))
+#     f <- function(beta)
+#         sum(devi$devi(c(X %*% beta) + offset, y))
 
-    if (is.null(cons))
-        g <- NULL
-    else
-        g <- function(beta) {
-            s <- cons(beta)$score
-            c(s, -s) #Equality constraint
-        }
+#     if (is.null(cons))
+#         g <- NULL
+#     else
+#         g <- function(beta) {
+#             s <- cons(beta)$score
+#             c(s, -s) #Equality constraint
+#         }
 
-    result <- nloptr::cobyla(beta, fn=f, hin=g)
+#     result <- nloptr::cobyla(beta, fn=f, hin=g)
 
-    if (result$convergence <= 0)
-        warning("COBYLA failed to successfully converge.")
+#     if (result$convergence <= 0)
+#         warning("COBYLA failed to successfully converge.")
 
-    list(beta=result$par, deviance=result$value, iters=result$iter)
-}
+#     list(beta=result$par, deviance=result$value, iters=result$iter)
+# }
 
 
 
@@ -579,7 +579,7 @@ constrained_fit_slsqp <- function(y, X, devi, cons=NULL, offset=0, initial=NULL,
             list(constraints=cons_out$score, jacobian=cons_out$grad)
         }
 
-    opts <- list(algorithm="NLOPT_LD_SLSQP", xtol_abs=1e-6)
+    opts <- list(algorithm="NLOPT_LD_SLSQP", xtol_abs=rep(1e-6, length(beta)))
     if (equality)
         result <- nloptr::nloptr(beta, eval_f=f, eval_g_eq=g, opts=opts)
     else

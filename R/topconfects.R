@@ -15,35 +15,66 @@ first_match <- function(avail, options, default=NULL) {
     good[1]
 }
 
+
 #' Top confident effect sizes plot
+#'
+#' Create a ggplot2 object showing the confect, effect, and average expression level of top features in a Topconfects object. 
+#'
+#' For each gene, the estimated effect is shown as a dot. The confidence bound is shown as a line to positive or negative infinity, showing the set of non-rejected effect sizes for the feature. 
 #'
 #' @param confects A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.
 #'
 #' @param n Number if items to show.
+#'
+#' @param limits c(lower, upper) limits on x-axis.
 #'
 #' @return
 #'
 #' A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
 #'
 #' @export
-confects_plot <- function(confects, n=50) {
-    tab <- confects$table
+confects_plot <- function(confects, n=50, limits=NULL) {
+    tab <- head(confects$table, n)
     mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
 
-    p <- head(tab, n) %>%
+    if (is.null(limits)) {
+        min_effect <- min(tab$effect)
+        max_effect <- max(tab$effect)
+        if (!is.finite(max_effect))
+            limits <- c(-1,1)
+        else if (min(confects$table$effect) >= 0.0)
+            limits <- c(0, max_effect*1.05)
+        else {
+            max_abs_effect <- max(-min_effect,max_effect)
+            limits <- c(-max_abs_effect*1.05, max_abs_effect*1.05)
+        }
+    }
+
+    assert_that(is.numeric(limits), length(limits) == 2)
+
+    tab$confect_from <- limits[1]
+    tab$confect_to <- limits[2]
+    positive <- !is.na(tab$confect) & tab$effect > 0
+    tab$confect_from[positive] <- tab$confect[positive]
+    negative <- !is.na(tab$confect) & tab$effect < 0
+    tab$confect_to[negative] <- tab$confect[negative]
+
+    p <- tab %>%
         mutate_(name =~ factor(name,rev(name))) %>%
         ggplot(aes_string(y="name", x="effect")) +
         geom_vline(xintercept=0) +
-        geom_segment(aes_string(yend="name", x="confect", xend="effect")) +
+        geom_segment(aes_string(yend="name", x="confect_from", xend="confect_to")) +
         geom_point(aes_string(size=mag_col)) +
-        labs(x = confects$effect_desc)
+        scale_x_continuous(expand=c(0,0), limits=limits, oob=function(a,b) a) +
+        labs(x = confects$effect_desc) +
+        theme_bw()
 
     p
 }
 
 #' Mean-expression vs effect size plot
 #'
-#' Like plotMD in limma, but shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in white). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
+#' Like plotMD in limma, but shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in grey). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
 #'
 #' @param confects A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.
 #'
@@ -57,10 +88,11 @@ confects_plot_me <- function(confects) {
     mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
 
     p <- ggplot(tab, aes_string(x=mag_col)) +
-        geom_point(aes_string(y="effect"), color="white") +
+        geom_point(aes_string(y="effect"), color="#aaaaaa") +
         geom_hline(yintercept=0) +
         geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
-        labs(y = confects$effect_desc)
+        labs(y = confects$effect_desc) +
+        theme_bw()
 
     p
 }
@@ -100,7 +132,8 @@ rank_rank_plot <- function(vec1, vec2, label1="First ranking", label2="Second ra
         geom_text(data=df2, aes_string(x="2.1",y="rank2",label="name"), hjust=0,vjust=0.5) +
         scale_x_continuous(limits=c(0,3),breaks=c(1,2), minor_breaks=NULL, labels=c(label1,label2)) +
         scale_y_continuous(breaks=seq_len(n), minor_breaks=NULL, trans="reverse") +
-        labs(x="",y="")
+        labs(x="",y="") +
+        theme_bw()
 
     p
 }
