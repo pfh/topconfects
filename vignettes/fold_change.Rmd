@@ -99,7 +99,7 @@ confects
 
 ### Looking at the result
 
-Here the usual `logFC` values estimated by `limma` are shown as dots, with lines to the `signed_confect` value.
+Here the usual `logFC` values estimated by `limma` are shown as dots, with lines to the `confect` value.
 
 ```{r fig.height=7}
 confects_plot(confects)
