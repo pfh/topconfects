@@ -30,3 +30,4 @@ Technical note when using a non-linear effect size: Signed confects are based on
 \description{
 For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 }
+

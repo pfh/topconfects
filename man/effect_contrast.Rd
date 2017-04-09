@@ -15,3 +15,4 @@ An object defining how to calculate an effect size.
 \description{
 This is included for completeness and testing. limma_confects() and edger_confects() provide a faster version of this using limma's treat and edgeR's topTreat functions.
 }
+

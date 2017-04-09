@@ -4,6 +4,90 @@
 #
 #
 
+group_effect_1 <- function(design, coef, effect_func) {
+    assert_that(length(coef) == 1, coef >= 1, coef <= ncol(design)) 
+
+    get_effect <- function(n) {
+        s0 <- (seq_len(n)-1)*ncol(design)
+        group_coef <- coef + s0
+        effect_func(group_coef)
+    }
+
+    list(
+        design = design,
+        signed = get_effect(2)$signed,
+        limits = get_effect(2)$limits,
+        get_effect = get_effect)
+}
+
+#' Group effect for differential splicing
+#'
+#' Create a group effect object to detect differential splicing (or similar). The effect size is the root sum of squared differences of the coefficient from the mean.
+#'
+#' The coefficient should represent a difference between two conditions.
+#'
+#' The idea is to detect differences in differential expression between features in a group (ie exons in a gene).
+#'
+#' @param design Design matrix.
+#'
+#' @param coef Column number in design matrix of the coefficient to be tested.
+#'
+#' @return
+#'
+#' A group effect object.
+#'
+#' @seealso \code{\link{effect_rssm}}
+#'
+#' @export
+group_effect_rssm <- function(design, coef) group_effect_1(design, coef, effect_rssm)
+
+
+
+group_effect_2 <- function(design, coef1, coef2, effect_func) {
+    assert_that(length(coef1) == 1, coef1 >= 1, coef1 <= ncol(design)) 
+    assert_that(length(coef2) == 1, coef2 >= 1, coef2 <= ncol(design))
+
+    get_effect <- function(n) {
+        s0 <- (seq_len(n)-1)*ncol(design)
+        group_coef1 <- coef1 + s0
+        group_coef2 <- coef2 + s0
+        effect_func(group_coef1, group_coef2)
+    }
+
+    list(
+        design = design,
+        signed = get_effect(2)$signed,
+        limits = get_effect(2)$limits,
+        get_effect = get_effect)
+}
+
+#' Group effect for shifts in 5' or 3' end usage
+#'
+#' Create a group effect object to detect a shift in usage of features which are ordered within a group.
+#'
+#' group_effect_shift_log2 is almost certainly the version you want.
+#'
+#' The coefficients should represent the expression levels in two different conditions.
+#'
+#' @param design Design matrix.
+#'
+#' @param coef1 Column number of coefficient for first condition in design matrix.
+#'
+#' @param coef2 Column number of coefficient for second condition in design matrix.
+#'
+#' @return
+#'
+#' A group effect object.
+#'
+#' @seealso \code{\link{effect_shift}}, \code{\link{effect_shift_log2}}
+#'
+#' @export
+group_effect_shift <- function(design, coef1, coef2) group_effect_2(design, coef1, coef2, effect_shift)
+
+#' @rdname group_effect_shift
+#' @export
+group_effect_shift_log2 <- function(design, coef1, coef2) group_effect_2(design, coef1, coef2, effect_shift_log2)
+
 
 
 #' Group confects (differential exon usage, etc)
@@ -20,7 +104,7 @@
 #'
 #' @param group_id A factor of length \code{nrow(fit)}, assigning items to groups (eg genes).
 #'
-#' @param group_effect A \code{function(n)} returning an effect size object for a group with \code{n} members.
+#' @param group_effect A group effect object created by one of the A \code{group_effect_...} functions.
 #'
 #' @param fdr False Discovery Rate to maintain.
 #'
@@ -35,7 +119,6 @@
 #' @export
 edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01, design=NULL) {
     group_id <- factor(group_id)
-    group_effect <- memoise(group_effect)
 
     assert_that(is(fit, "DGEGLM"))
     assert_that(length(group_id) == nrow(fit))
@@ -50,6 +133,16 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     # Mimic edgeR's shrunk coefficients
     y <- addPriorCount(fit$counts, offset=fit$offset, prior.count=0.125)$y
     offset <- c(fit$offset) / log(2)
+
+    if (is.function(group_effect))
+        # Deprecated
+        get_effect <- group_effect
+    else {
+        get_effect <- group_effect$get_effect
+        design <- group_effect$design
+    }
+    get_effect <- memoise(get_effect)
+
     if (is.null(design))
         design <- fit$design
 
@@ -108,7 +201,7 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     }
 
     effect <- function(i)
-        group_effect(sizes[i])
+        get_effect(sizes[i])
 
     confects <- nonlinear_confects(
         df_residual, s2_prior, df_prior, fit_features, effect, fdr, step, tech_rep=sizes)
@@ -119,6 +212,8 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
 
     confects$edger_fit <- fit
     confects$members <- members
+    if (is.list(group_effect))
+        confects$limits <- group_effect$limits
 
     confects
 }

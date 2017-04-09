@@ -16,15 +16,20 @@ reference:
       - limma_nonlinear_confects
       - nest_confects
 
+  - title: Non-linear effect size definitions
+    desc: These can be used with edger_confects or limma_nonlinear_confects.
+    contents:
+      - starts_with("effect_")
+
   - title: Find top confident effect sizes for groups of features
     desc: For differential splicing, or shifts of transcript start or end.
     contents:
       - edger_group_confects
 
-  - title: Non-linear effect size definitions
-    desc: These can be used with edger_confects or limma_nonlinear_confects.
+  - title: Group effect size definitions
+    desc: These can be used with edger_group_confects.
     contents:
-      - starts_with("effect_")
+      - starts_with("group_effect_")
 
   - title: Diagnostic plots
     contents:

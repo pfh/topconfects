@@ -12,7 +12,7 @@ edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01,
 
 \item{group_id}{A factor of length \code{nrow(fit)}, assigning items to groups (eg genes).}
 
-\item{group_effect}{A \code{function(n)} returning an effect size object for a group with \code{n} members.}
+\item{group_effect}{A group effect object created by one of the A \code{group_effect_...} functions.}
 
 \item{fdr}{False Discovery Rate to maintain.}
 
@@ -33,3 +33,4 @@ Groups with less than two members will be ignored.
 
 To construct a group design matrix, the design from \code{fit} will be repeated in a block diagonal matrix.
 }
+

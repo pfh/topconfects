@@ -22,3 +22,4 @@ Create a ggplot2 object showing the confect, effect, and average expression leve
 \details{
 For each gene, the estimated effect is shown as a dot. The confidence bound is shown as a line to positive or negative infinity, showing the set of non-rejected effect sizes for the feature.
 }
+

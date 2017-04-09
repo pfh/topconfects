@@ -135,6 +135,8 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, step=0.01) {
     confects$table$logCPM <- data$AveLogCPM[confects$table$index]
     confects$table$name <- rownames(data)[confects$table$index]
 
+    confects$limits <- effect$limits
+
     confects
 }
 
@@ -200,6 +202,7 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01
 
     confects$object <- object
     confects$limma_fit <- limma_fit
+    confects$limits <- effect$limits
 
     if (!is.null(eawp$probes)) {
         confects$table <- cbind(confects$table, eawp$probes[confects$table$index,])

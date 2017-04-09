@@ -1,4 +1,29 @@
 
+confects_description <- function(confects) {
+    result <- paste0(
+       sum(!is.na(confects$table$confect)),
+       " of ", nrow(confects$table), " non-zero ", confects$effect_desc, 
+       " at FDR ", confects$fdr, "\n")
+
+    if (!is.null(confects$edger_fit) && length(confects$edger_fit$df.prior) == 1)
+        result <- paste0(result,
+            "Prior df ", sprintf("%.1f", confects$edger_fit$df.prior), "\n")
+
+    if (!is.null(confects$limma_fit) && length(confects$limma_fit$df.prior) == 1)
+        result <- paste0(result,
+            "Prior df ", sprintf("%.1f", confects$edger_fit$df.prior), "\n")
+
+    if (!is.null(confects$edger_fit$dispersion))
+        result <- paste0(result,
+            sprintf("Dispersion %.2f to %.2f\n",
+                min(confects$edger_fit$dispersion),
+                max(confects$edger_fit$dispersion)),
+            sprintf("Biological CV %.0f%% to %.0f%%\n",
+                100*sqrt(min(confects$edger_fit$dispersion)),
+                100*sqrt(max(confects$edger_fit$dispersion)))) 
+}
+
+
 
 methods::setClass("Topconfects", methods::representation("list"))
 
@@ -6,7 +31,7 @@ methods::setMethod("show", "Topconfects", function(object) {
     cat("$table\n")
     print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
     if (nrow(object$table) > 10) cat("...\n")
-    cat(sum(!is.na(object$table$confect)),"of",nrow(object$table),"non-zero", object$effect_desc, "at FDR",object$fdr,"\n")
+    cat(confects_description(object))
 })
 
 first_match <- function(avail, options, default=NULL) {
@@ -36,6 +61,9 @@ first_match <- function(avail, options, default=NULL) {
 confects_plot <- function(confects, n=50, limits=NULL) {
     tab <- head(confects$table, n)
     mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
+
+    if (is.null(limits))
+        limits <- confects$limits
 
     if (is.null(limits)) {
         min_effect <- min(tab$effect)
@@ -88,7 +116,7 @@ confects_plot_me <- function(confects) {
     mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
 
     p <- ggplot(tab, aes_string(x=mag_col)) +
-        geom_point(aes_string(y="effect"), color="#aaaaaa") +
+        geom_point(aes_string(y="effect"), color="#cccccc") +
         geom_hline(yintercept=0) +
         geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
         labs(y = confects$effect_desc) +

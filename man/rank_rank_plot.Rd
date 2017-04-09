@@ -24,3 +24,4 @@ A ggplot2 object. Working non-interactively, you must print() this for it to be 
 \description{
 This is useful, for example, when comparing different methods of ranking potentially interesting differentially expressed genes.
 }
+

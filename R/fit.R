@@ -107,6 +107,7 @@ devi_link_log2 <- function(devi) {
 effect_link_log2 <- function(effect) {
     list(
         signed = effect$signed,
+        limits = effect$limits,
         df = effect$df,
 
         calc = function(beta) effect$calc(exp(beta*ln2)),
@@ -309,6 +310,7 @@ effect_shift <- function(coef1, coef2) {
 
     list(
         signed = TRUE,
+        limits = c(-1,1),
         df = 1,
 
         calc = function(beta) {
@@ -559,9 +561,9 @@ effect_gamma_log2 <- function(coef1, coef2)
 # equality TRUE -> constraint == 0, FALSE constraint >= 0
 constrained_fit_slsqp <- function(y, X, devi, cons=NULL, offset=0, initial=NULL, equality=TRUE) {
     # Initial guess
-    if (!is.null(initial))
+    if (!is.null(initial)) {
         beta <- initial
-    else {
+    } else {
         beta <- qr.coef(qr(X), devi$y_to_x(y) - offset)
         beta[is.na(beta)] <- 0.0
     }
@@ -571,22 +573,25 @@ constrained_fit_slsqp <- function(y, X, devi, cons=NULL, offset=0, initial=NULL,
         list(objective=sum(d$devi), gradient=colSums(d$devi_x*X))
     }
 
-    if (is.null(cons))
+    if (is.null(cons)) {
         g <- NULL
-    else
+    } else {
         g <- function(beta) {
             cons_out <- cons(beta)
             list(constraints=cons_out$score, jacobian=cons_out$grad)
         }
+    }
 
     opts <- list(algorithm="NLOPT_LD_SLSQP", xtol_abs=rep(1e-6, length(beta)))
-    if (equality)
+    if (equality) {
         result <- nloptr::nloptr(beta, eval_f=f, eval_g_eq=g, opts=opts)
-    else
+    } else {
         result <- nloptr::nloptr(beta, eval_f=f, eval_g_ineq=g, opts=opts)
+    }
 
-    if (result$status <= 0)
+    if (result$status <= 0) {
         warning("SLSQP failed to successfully converge.")
+    }
 
     list(beta=result$solution, deviance=result$objective, iters=result$iter)
 }

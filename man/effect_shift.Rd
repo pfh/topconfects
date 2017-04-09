@@ -27,3 +27,4 @@ This can be viewed as similar to Somers' D.
 
 Note that this effect size is not symmetric: \code{effect_shift_log2(c(1,2),c(3,4))} and \code{effect_shift_log2(c(1,3),c(2,4))} will give different results.
 }
+
