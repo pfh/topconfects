@@ -294,6 +294,8 @@ effect_rss <- function(coef) {
 #'
 #' Note that this effect size is not symmetric: \code{effect_shift_log2(c(1,2),c(3,4))} and \code{effect_shift_log2(c(1,3),c(2,4))} will give different results.
 #'
+#' The _stepdown and _stepup versions are for cumulative distributions. These are most useful in group effect form, where they can be used to examine shifts in start or end of transcriptions from RNA-seq or microarray data.
+#'
 #' @param coef1 Column numbers in the design matrix for the first condition, in some meaningful order.
 #'
 #' @param coef2 Corresponding column numbers for the second condition.
@@ -308,15 +310,43 @@ effect_shift <- function(coef1, coef2) {
     n <- length(coef1)
     sign_mat <- sign(outer(-seq_len(n),seq_len(n), `+`))
 
+    effect_shift_inner(n, sign_mat, coef1, coef2, c(-1,1))
+}
+
+#' @rdname effect_shift
+#' @export
+effect_shift_stepdown <- function(coef1, coef2) {
+    assert_that(length(coef1) == length(coef2))
+    n <- length(coef1)
+
+    f <- function(r,c) {
+        ifelse(r+1 == c, 
+            r*r+1, 
+            ifelse(r == c+1, 
+                -c*c-1, 
+                sign(c-r)))
+    }
+    mat <- outer(seq_len(n),seq_len(n), f)
+
+    effect_shift_inner(n, mat, coef1, coef2, NULL)
+}
+
+#' @rdname effect_shift
+#' @export
+effect_shift_stepup <- function(coef1, coef2) {
+    effect_shift_stepdown(rev(coef2), rev(coef1))
+}
+
+effect_shift_inner <- function(n, mat, coef1, coef2, limits=NULL) {
     list(
         signed = TRUE,
-        limits = c(-1,1),
+        limits = limits,
         df = 1,
 
         calc = function(beta) {
             beta1 <- beta[coef1]
             beta2 <- beta[coef2]
-            a <- sum(outer(beta1,beta2)*sign_mat)
+            a <- sum(outer(beta1,beta2)*mat)
             b <- sum(beta1) * sum(beta2)
             a/b
         },
@@ -325,12 +355,12 @@ effect_shift <- function(coef1, coef2) {
             function(beta) {
                 beta1 <- beta[coef1]
                 beta2 <- beta[coef2]
-                a <- sum(outer(beta1,beta2)*sign_mat)
+                a <- sum(outer(beta1,beta2)*mat)
                 b1 <- sum(beta1)
                 b2 <- sum(beta2)
                 grad <- rep(0.0, length(beta))
-                grad[coef1] <-               colSums(beta2*t(sign_mat))/b1/b2 - a/b2/(b1*b1)
-                grad[coef2] <- grad[coef2] + colSums(beta1*sign_mat)/b1/b2    - a/b1/(b2*b2)
+                grad[coef1] <-               colSums(beta2*t(mat))/b1/b2 - a/b2/(b1*b1)
+                grad[coef2] <- grad[coef2] + colSums(beta1*mat)/b1/b2    - a/b1/(b2*b2)
                 list(
                     score = a/b1/b2 - effect_size,
                     grad = grad
@@ -344,6 +374,40 @@ effect_shift <- function(coef1, coef2) {
 #' @export
 effect_shift_log2 <- function(coef1, coef2)
     effect_link_log2(effect_shift(coef1, coef2))
+
+#' @rdname effect_shift
+#' @export
+effect_shift_stepdown_log2 <- function(coef1, coef2)
+    effect_link_log2(effect_shift_stepdown(coef1, coef2))
+
+#' @rdname effect_shift
+#' @export
+effect_shift_stepup_log2 <- function(coef1, coef2)
+    effect_link_log2(effect_shift_stepup(coef1, coef2))
+
+
+#' Shift of mass effect, with cumulative coefficients
+#'
+#'
+#' The group effect version of this will be of particular interest, for example detecting shifts in 5' and 3' ends of transcripts from microarray or RNA-seq data.
+#'
+#' @export
+effect_shift_cumulative <- function(coef1, coef2) {
+    assert_that(length(coef1) == length(coef2))
+    n <- length(coef1)
+
+    list(
+        signed = TRUE,
+        df = 1,
+
+        calc = function(beta) {
+            beta1 <- beta[coef1]
+            beta2 <- beta[coef2]
+            ...
+        }
+    )
+}
+
 
 
 #' Goodman and Kruskall's gamma, Yule's Q

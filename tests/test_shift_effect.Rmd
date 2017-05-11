@@ -1,0 +1,27 @@
+---
+title: Test properties of shift effects
+---
+
+```{r}
+library(tidyverse)
+devtools::load_all("..")
+
+shifter <- effect_shift(c(1,2,3),c(4,5,6))
+
+shifter$calc(c(5,0,0, 0,2,0))
+shifter$calc(c(0,3,0, 7,0,0))
+shifter$calc(c(0,1,0, 1,0,1))
+
+shifter <- effect_shift_stepdown(c(1,2,3),c(4,5,6))
+
+shifter$calc(c(5,0,0, 2,2,0))
+shifter$calc(c(3,3,0, 7,0,0))
+shifter$calc(c(1,1,0, 2,1,1)) # It's not exactly the same as effect_shift
+shifter$calc(c(1,1,0, 4,1,1))
+
+shifter <- effect_shift_stepup(c(1,2,3),c(4,5,6))
+
+shifter$calc(c(5,5,5, 0,2,2))
+shifter$calc(c(0,3,3, 7,7,7))
+shifter$calc(c(0,1,1, 1,1,2))
+```

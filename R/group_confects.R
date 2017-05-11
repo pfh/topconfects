@@ -69,6 +69,8 @@ group_effect_2 <- function(design, coef1, coef2, effect_func) {
 #'
 #' The coefficients should represent the expression levels in two different conditions.
 #'
+#' The _stepup and _stepdown versions may be used to look for shifts in start or end of transcription from RNA-seq or microarray data, where the observed levels are expected to be cumulative or reverse cumulative.
+#'
 #' @param design Design matrix.
 #'
 #' @param coef1 Column number of coefficient for first condition in design matrix.
@@ -82,12 +84,33 @@ group_effect_2 <- function(design, coef1, coef2, effect_func) {
 #' @seealso \code{\link{effect_shift}}, \code{\link{effect_shift_log2}}
 #'
 #' @export
-group_effect_shift <- function(design, coef1, coef2) group_effect_2(design, coef1, coef2, effect_shift)
+group_effect_shift <- function(design, coef1, coef2) 
+    group_effect_2(design, coef1, coef2, effect_shift)
 
 #' @rdname group_effect_shift
 #' @export
-group_effect_shift_log2 <- function(design, coef1, coef2) group_effect_2(design, coef1, coef2, effect_shift_log2)
+group_effect_shift_stepup <- function(design, coef1, coef2) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepup)
 
+#' @rdname group_effect_shift
+#' @export
+group_effect_shift_stepdown <- function(design, coef1, coef2) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepdown)
+
+#' @rdname group_effect_shift
+#' @export
+group_effect_shift_log2 <- function(design, coef1, coef2) 
+    group_effect_2(design, coef1, coef2, effect_shift_log2)
+
+#' @rdname group_effect_shift
+#' @export
+group_effect_shift_stepup_log2 <- function(design, coef1, coef2) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepup_log2)
+
+#' @rdname group_effect_shift
+#' @export
+group_effect_shift_stepdown_log2 <- function(design, coef1, coef2) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepdown_log2)
 
 
 #' Group confects (differential exon usage, etc)
