@@ -37,4 +37,3 @@ Some wrappers around this function may add a sign to the \code{confect} column, 
 \description{
 Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate for each set.
 }
-

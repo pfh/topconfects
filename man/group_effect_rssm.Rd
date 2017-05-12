@@ -25,4 +25,3 @@ The idea is to detect differences in differential expression between features in
 \seealso{
 \code{\link{effect_rssm}}
 }
-

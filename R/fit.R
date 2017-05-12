@@ -386,29 +386,6 @@ effect_shift_stepup_log2 <- function(coef1, coef2)
     effect_link_log2(effect_shift_stepup(coef1, coef2))
 
 
-#' Shift of mass effect, with cumulative coefficients
-#'
-#'
-#' The group effect version of this will be of particular interest, for example detecting shifts in 5' and 3' ends of transcripts from microarray or RNA-seq data.
-#'
-#' @export
-effect_shift_cumulative <- function(coef1, coef2) {
-    assert_that(length(coef1) == length(coef2))
-    n <- length(coef1)
-
-    list(
-        signed = TRUE,
-        df = 1,
-
-        calc = function(beta) {
-            beta1 <- beta[coef1]
-            beta2 <- beta[coef2]
-            ...
-        }
-    )
-}
-
-
 
 #' Goodman and Kruskall's gamma, Yule's Q
 #'

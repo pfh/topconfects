@@ -19,4 +19,3 @@ An object defining how to calculate an effect size.
 \description{
 Ratio of two contrasts, i.e. \code{sum(contrast1*beta)/sum(contrast2*beta)}.
 }
-
