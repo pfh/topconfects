@@ -11,7 +11,7 @@ confects_description <- function(confects) {
 
     if (!is.null(confects$limma_fit) && length(confects$limma_fit$df.prior) == 1)
         result <- paste0(result,
-            "Prior df ", sprintf("%.1f", confects$edger_fit$df.prior), "\n")
+            "Prior df ", sprintf("%.1f", confects$limma_fit$df.prior), "\n")
 
     if (!is.null(confects$edger_fit$dispersion))
         result <- paste0(result,
@@ -21,6 +21,8 @@ confects_description <- function(confects) {
             sprintf("Biological CV %.0f%% to %.0f%%\n",
                 100*sqrt(min(confects$edger_fit$dispersion)),
                 100*sqrt(max(confects$edger_fit$dispersion)))) 
+
+    result
 }
 
 

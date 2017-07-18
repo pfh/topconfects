@@ -18,7 +18,7 @@ limma_nonlinear_confects(object, design, effect, fdr = 0.05, step = 0.01)
 \item{step}{Granularity of log2 fold changes to test.}
 }
 \value{
-Technical note: Signed consfects are based on TREAT-style p-values. Unsigned consfects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
+Technical note: Signed confects are based on TREAT-style p-values. Unsigned confects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
 
 See \code{\link{nest_confects}} for details of how to interpret the result.
 }

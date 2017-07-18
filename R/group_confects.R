@@ -123,7 +123,9 @@ group_effect_shift_stepdown_log2 <- function(design, coef1, coef2)
 #'
 #' To construct a group design matrix, the design from \code{fit} will be repeated in a block diagonal matrix.
 #'
-#' @param fit An edgeR DGEGLM object.
+#' @param fit For edgeR, an edgeR DGEGLM object.
+#'
+#' @param object For limma, an expression matrix or EList object, or anything limma's lmFit will accept.
 #'
 #' @param group_id A factor of length \code{nrow(fit)}, assigning items to groups (eg genes).
 #'
@@ -132,15 +134,15 @@ group_effect_shift_stepdown_log2 <- function(design, coef1, coef2)
 #' @param fdr False Discovery Rate to maintain.
 #'
 #' @param step Step size when calculating confident effect sizes.
-#'
-#' @param design The design matrix is usually taken from \code{fit}, however it may be overridden with this parameter. Note that dispersion estimates and df.prior are taken from \code{fit}. So you may estimate dispersions with a simpler model than is specified here, in order to at least obtain pessimistic confects when you lack replicates.
 #' 
+#' @param trend For limma, should \code{eBayes(trend=TRUE)} be used?
+#'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01, design=NULL) {
+edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.01) {
     group_id <- factor(group_id)
 
     assert_that(is(fit, "DGEGLM"))
@@ -157,17 +159,9 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     y <- addPriorCount(fit$counts, offset=fit$offset, prior.count=0.125)$y
     offset <- c(fit$offset) / log(2)
 
-    if (is.function(group_effect))
-        # Deprecated
-        get_effect <- group_effect
-    else {
-        get_effect <- group_effect$get_effect
-        design <- group_effect$design
-    }
+    get_effect <- group_effect$get_effect
     get_effect <- memoise(get_effect)
-
-    if (is.null(design))
-        design <- fit$design
+    design <- group_effect$design
 
     n_items <- nrow(y)
     n_samples <- ncol(y)
@@ -245,6 +239,101 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
 
 
 
+#' @rdname edger_group_confects
+#' @export
+limma_group_confects <- function(object, group_id, group_effect, fdr=0.05, step=0.01, trend=FALSE) {
+    group_id <- factor(group_id)
+
+    eawp <- getEAWP(object)
+
+    y <- eawp$exprs
+    if (is.null(eawp$weights))
+        weights <- matrix(1, nrow=nrow(y), ncol=ncol(y))
+    else
+        weights <- eawp$weights
+
+    assert_that(length(group_id) == nrow(y))
+
+    members <- split(seq_len(nrow(y)), group_id)
+    members <- members[ map_int(members,length) >= 2 ]
+    sizes <- map_int(members,length)
+    n <- length(members)
+
+    get_effect <- group_effect$get_effect
+    get_effect <- memoise(get_effect)
+    design <- group_effect$design
+
+    n_items <- nrow(y)
+    n_samples <- ncol(y)
+    n_coef <- ncol(design)
+    assert_that(nrow(design) == n_samples)
+
+    limma_fit <- lmFit(object, design) %>% 
+        eBayes(trend=trend)
+
+    AveExpr <- map_dbl(members,function(items) mean(limma_fit$Amean[items]))
+
+    assert_that(length(limma_fit$df.prior) == 1)
+    df_prior <- rep(limma_fit$df.prior, n)
+    # Hmm
+    s2_prior_item <- broadcast(limma_fit$s2.prior, n_items)
+    s2_prior <- map_dbl(members, function(indices) mean(s2_prior_item[indices]))
+
+    df_residual <- sizes*(n_samples-n_coef)
+
+    group_design <- function(m) {
+        zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
+        big_design <- matrix(0,nrow=0,ncol=m*ncol(design))
+        for(i in seq_len(m)) {
+            big_design <- rbind(big_design,
+                do.call(cbind,c(
+                    rep(list(zero_block), i-1),
+                    list(design),
+                    rep(list(zero_block), m-i)
+                ))
+            )
+        }
+
+        big_design
+    }
+    group_design <- memoise(group_design)
+
+    fit_features <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
+        m <- sizes[i]
+        this_design <- group_design(m)
+        this_y <- do.call(c, 
+            lapply(members[[i]], function(j) y[j,]))
+        this_weights <- do.call(c,
+            lapply(members[[i]], function(j) weights[j,]))
+
+        #(if (is.null(cons)) constrained_fit_newton else constrained_fit_slsqp)(
+        constrained_fit_slsqp(
+            this_y,
+            this_design,
+            devi_normal(this_weights),
+            cons,
+            initial=initial,
+            equality=equality)
+    }
+
+    effect <- function(i)
+        get_effect(sizes[i])
+
+    confects <- nonlinear_confects(
+        df_residual, s2_prior, df_prior, fit_features, effect, fdr, step, tech_rep=sizes)
+    # Intent of tech_rep=sizes: Each *sample* only counts for one observation of the residual deviance
+
+    confects$table$AveExpr <- AveExpr[confects$table$index]
+    confects$table$name <- names(members)[confects$table$index]
+
+    confects$limma_fit <- limma_fit
+    confects$members <- members
+    confects$limits <- group_effect$limits
+
+    confects
+}
+
+# TODO: remove code duplication
 
 
 
