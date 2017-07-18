@@ -15,10 +15,10 @@ confects_description <- function(confects) {
 
     if (!is.null(confects$edger_fit$dispersion))
         result <- paste0(result,
-            sprintf("Dispersion %.2f to %.2f\n",
+            sprintf("Dispersion %#.2g to %#.2g\n",
                 min(confects$edger_fit$dispersion),
                 max(confects$edger_fit$dispersion)),
-            sprintf("Biological CV %.0f%% to %.0f%%\n",
+            sprintf("Biological CV %.1f%% to %.1f%%\n",
                 100*sqrt(min(confects$edger_fit$dispersion)),
                 100*sqrt(max(confects$edger_fit$dispersion)))) 
 }
