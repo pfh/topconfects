@@ -2,12 +2,24 @@
 % Please edit documentation in R/group_confects.R
 \name{group_effect_shift}
 \alias{group_effect_shift}
+\alias{group_effect_shift_stepup}
+\alias{group_effect_shift_stepdown}
 \alias{group_effect_shift_log2}
+\alias{group_effect_shift_stepup_log2}
+\alias{group_effect_shift_stepdown_log2}
 \title{Group effect for shifts in 5' or 3' end usage}
 \usage{
 group_effect_shift(design, coef1, coef2)
 
+group_effect_shift_stepup(design, coef1, coef2)
+
+group_effect_shift_stepdown(design, coef1, coef2)
+
 group_effect_shift_log2(design, coef1, coef2)
+
+group_effect_shift_stepup_log2(design, coef1, coef2)
+
+group_effect_shift_stepdown_log2(design, coef1, coef2)
 }
 \arguments{
 \item{design}{Design matrix.}
@@ -26,8 +38,9 @@ Create a group effect object to detect a shift in usage of features which are or
 group_effect_shift_log2 is almost certainly the version you want.
 
 The coefficients should represent the expression levels in two different conditions.
+
+The _stepup and _stepdown versions may be used to look for shifts in start or end of transcription from RNA-seq or microarray data, where the observed levels are expected to be cumulative or reverse cumulative.
 }
 \seealso{
 \code{\link{effect_shift}}, \code{\link{effect_shift_log2}}
 }
-

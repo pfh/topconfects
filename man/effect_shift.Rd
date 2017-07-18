@@ -2,12 +2,24 @@
 % Please edit documentation in R/fit.R
 \name{effect_shift}
 \alias{effect_shift}
+\alias{effect_shift_stepdown}
+\alias{effect_shift_stepup}
 \alias{effect_shift_log2}
+\alias{effect_shift_stepdown_log2}
+\alias{effect_shift_stepup_log2}
 \title{Shift of mass effect}
 \usage{
 effect_shift(coef1, coef2)
 
+effect_shift_stepdown(coef1, coef2)
+
+effect_shift_stepup(coef1, coef2)
+
 effect_shift_log2(coef1, coef2)
+
+effect_shift_stepdown_log2(coef1, coef2)
+
+effect_shift_stepup_log2(coef1, coef2)
 }
 \arguments{
 \item{coef1}{Column numbers in the design matrix for the first condition, in some meaningful order.}
@@ -26,5 +38,6 @@ This can be viewed as similar to Somers' D.
 \code{effect_shift_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
 
 Note that this effect size is not symmetric: \code{effect_shift_log2(c(1,2),c(3,4))} and \code{effect_shift_log2(c(1,3),c(2,4))} will give different results.
-}
 
+The _stepdown and _stepup versions are for cumulative distributions. These are most useful in group effect form, where they can be used to examine shifts in start or end of transcriptions from RNA-seq or microarray data.
+}

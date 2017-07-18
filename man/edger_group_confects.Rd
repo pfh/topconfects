@@ -2,13 +2,16 @@
 % Please edit documentation in R/group_confects.R
 \name{edger_group_confects}
 \alias{edger_group_confects}
+\alias{limma_group_confects}
 \title{Group confects (differential exon usage, etc)}
 \usage{
-edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01,
-  design = NULL)
+edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01)
+
+limma_group_confects(object, group_id, group_effect, fdr = 0.05,
+  step = 0.01, trend = FALSE)
 }
 \arguments{
-\item{fit}{An edgeR DGEGLM object.}
+\item{fit}{For edgeR, an edgeR DGEGLM object.}
 
 \item{group_id}{A factor of length \code{nrow(fit)}, assigning items to groups (eg genes).}
 
@@ -18,7 +21,9 @@ edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01,
 
 \item{step}{Step size when calculating confident effect sizes.}
 
-\item{design}{The design matrix is usually taken from \code{fit}, however it may be overridden with this parameter. Note that dispersion estimates and df.prior are taken from \code{fit}. So you may estimate dispersions with a simpler model than is specified here, in order to at least obtain pessimistic confects when you lack replicates.}
+\item{object}{For limma, an expression matrix or EList object, or anything limma's lmFit will accept.}
+
+\item{trend}{For limma, should \code{eBayes(trend=TRUE)} be used?}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
@@ -33,4 +38,3 @@ Groups with less than two members will be ignored.
 
 To construct a group design matrix, the design from \code{fit} will be repeated in a block diagonal matrix.
 }
-

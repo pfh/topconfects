@@ -20,4 +20,3 @@ Goodman and Kruskall's gamma as an effect size. Yule's Q is a special case where
 \details{
 \code{effect_gamma_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
 }
-
