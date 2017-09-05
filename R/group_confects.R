@@ -4,7 +4,7 @@
 #
 #
 
-group_effect_1 <- function(design, coef, effect_func) {
+group_effect_1 <- function(design, coef, effect_func, design_common=NULL) {
     assert_that(length(coef) == 1, coef >= 1, coef <= ncol(design)) 
 
     get_effect <- function(n) {
@@ -32,6 +32,8 @@ group_effect_1 <- function(design, coef, effect_func) {
 #'
 #' @param coef Column number in design matrix of the coefficient to be tested.
 #'
+#' @param design_common Experimental! Optional sample-level design matrix. For example, this can be used to account for a batch effect or matched samples.
+#'
 #' @return
 #'
 #' A group effect object.
@@ -39,11 +41,12 @@ group_effect_1 <- function(design, coef, effect_func) {
 #' @seealso \code{\link{effect_rssm}}
 #'
 #' @export
-group_effect_rssm <- function(design, coef) group_effect_1(design, coef, effect_rssm)
+group_effect_rssm <- function(design, coef, design_common=NULL) 
+    group_effect_1(design, coef, effect_rssm, design_common=design_common)
 
 
 
-group_effect_2 <- function(design, coef1, coef2, effect_func) {
+group_effect_2 <- function(design, coef1, coef2, effect_func, design_common=NULL) {
     assert_that(length(coef1) == 1, coef1 >= 1, coef1 <= ncol(design)) 
     assert_that(length(coef2) == 1, coef2 >= 1, coef2 <= ncol(design))
 
@@ -56,6 +59,7 @@ group_effect_2 <- function(design, coef1, coef2, effect_func) {
 
     list(
         design = design,
+        design_common = design_common,
         signed = get_effect(2)$signed,
         limits = get_effect(2)$limits,
         get_effect = get_effect)
@@ -77,6 +81,8 @@ group_effect_2 <- function(design, coef1, coef2, effect_func) {
 #'
 #' @param coef2 Column number of coefficient for second condition in design matrix.
 #'
+#' @param design_common Experimental! Optional sample-level design matrix. For example, this can be used to account for a batch effect or matched samples.
+#'
 #' @return
 #'
 #' A group effect object.
@@ -84,34 +90,69 @@ group_effect_2 <- function(design, coef1, coef2, effect_func) {
 #' @seealso \code{\link{effect_shift}}, \code{\link{effect_shift_log2}}
 #'
 #' @export
-group_effect_shift <- function(design, coef1, coef2) 
-    group_effect_2(design, coef1, coef2, effect_shift)
+group_effect_shift <- function(design, coef1, coef2, design_common=NULL) 
+    group_effect_2(design, coef1, coef2, effect_shift, design_common=design_common)
 
 #' @rdname group_effect_shift
 #' @export
-group_effect_shift_stepup <- function(design, coef1, coef2) 
-    group_effect_2(design, coef1, coef2, effect_shift_stepup)
+group_effect_shift_stepup <- function(design, coef1, coef2, design_common=NULL) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepup, design_common=design_common)
 
 #' @rdname group_effect_shift
 #' @export
-group_effect_shift_stepdown <- function(design, coef1, coef2) 
-    group_effect_2(design, coef1, coef2, effect_shift_stepdown)
+group_effect_shift_stepdown <- function(design, coef1, coef2, design_common=NULL) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepdown, design_common=design_common)
 
 #' @rdname group_effect_shift
 #' @export
-group_effect_shift_log2 <- function(design, coef1, coef2) 
-    group_effect_2(design, coef1, coef2, effect_shift_log2)
+group_effect_shift_log2 <- function(design, coef1, coef2, design_common=NULL) 
+    group_effect_2(design, coef1, coef2, effect_shift_log2, design_common=design_common)
 
 #' @rdname group_effect_shift
 #' @export
-group_effect_shift_stepup_log2 <- function(design, coef1, coef2) 
-    group_effect_2(design, coef1, coef2, effect_shift_stepup_log2)
+group_effect_shift_stepup_log2 <- function(design, coef1, coef2, design_common=NULL) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepup_log2, design_common=design_common)
 
 #' @rdname group_effect_shift
 #' @export
-group_effect_shift_stepdown_log2 <- function(design, coef1, coef2) 
-    group_effect_2(design, coef1, coef2, effect_shift_stepdown_log2)
+group_effect_shift_stepdown_log2 <- function(design, coef1, coef2, design_common=NULL) 
+    group_effect_2(design, coef1, coef2, effect_shift_stepdown_log2, design_common=design_common)
 
+
+#
+# Make a function to assemble a group design matrix
+#
+group_design_maker <- function(design, design_common=NULL) {
+    stopifnot(is.matrix(design))
+
+    if (!is.null(design_common)) {
+        stopifnot(is.matrix(design_common))
+        stopifnot(nrow(design_common) == nrow(design))
+    }
+
+    group_design <- function(m) {
+        zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
+        big_design <- matrix(0,nrow=0,ncol=m*ncol(design))
+        for(i in seq_len(m)) {
+            big_design <- rbind(big_design,
+                do.call(cbind,c(
+                    rep(list(zero_block), i-1),
+                    list(design),
+                    rep(list(zero_block), m-i)
+                ))
+            )
+        }
+
+        if (!is.null(design_common)) {
+            design_common_rep <- do.call(rbind, rep(list(design_common), m))
+            big_design <- cbind(big_design, design_common_rep)
+        }
+
+        big_design
+    }
+
+    memoise(group_design)
+}
 
 #' Group confects (differential exon usage, etc)
 #'
@@ -162,12 +203,19 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     get_effect <- group_effect$get_effect
     get_effect <- memoise(get_effect)
     design <- group_effect$design
+    design_common <- group_effect$design_common
+    group_design <- group_design_maker(design, design_common)
 
     n_items <- nrow(y)
     n_samples <- ncol(y)
     n_coef <- ncol(design)
     assert_that(nrow(design) == n_samples)
     assert_that(length(offset) == n_samples)
+
+    if (!is.null(design_common)) {
+        warning("Deviance moderation is currently disabled when design_common is used.")
+        fit$df.prior <- 0.0
+    }
 
     assert_that(length(fit$df.prior) == 1)
 
@@ -179,23 +227,6 @@ edger_group_confects <- function(fit, group_id, group_effect, fdr=0.05, step=0.0
     df_residual <- sizes*(n_samples-n_coef)
 
     dispersions <- broadcast(fit$dispersion, n_items)
-
-    group_design <- function(m) {
-        zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
-        big_design <- matrix(0,nrow=0,ncol=m*ncol(design))
-        for(i in seq_len(m)) {
-            big_design <- rbind(big_design,
-                do.call(cbind,c(
-                    rep(list(zero_block), i-1),
-                    list(design),
-                    rep(list(zero_block), m-i)
-                ))
-            )
-        }
-
-        big_design
-    }
-    group_design <- memoise(group_design)
 
     fit_features <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
         m <- sizes[i]
@@ -262,6 +293,14 @@ limma_group_confects <- function(object, group_id, group_effect, fdr=0.05, step=
     get_effect <- group_effect$get_effect
     get_effect <- memoise(get_effect)
     design <- group_effect$design
+    design_common <- group_effect$design_common
+    group_design <- group_design_maker(design, design_common)
+
+    if (is.null(design_common)) {
+        design_full <- design
+    } else {
+        design_full <- cbind(design, design_common)
+    }
 
     n_items <- nrow(y)
     n_samples <- ncol(y)
@@ -270,6 +309,11 @@ limma_group_confects <- function(object, group_id, group_effect, fdr=0.05, step=
 
     limma_fit <- lmFit(object, design) %>% 
         eBayes(trend=trend)
+
+    if (!is.null(design_common)) {
+        warning("Variance moderation is currently disabled when design_common is used.")
+        limma_fit$df.prior <- 0.0
+    }
 
     AveExpr <- map_dbl(members,function(items) mean(limma_fit$Amean[items]))
 
@@ -280,23 +324,6 @@ limma_group_confects <- function(object, group_id, group_effect, fdr=0.05, step=
     s2_prior <- map_dbl(members, function(indices) mean(s2_prior_item[indices]))
 
     df_residual <- sizes*(n_samples-n_coef)
-
-    group_design <- function(m) {
-        zero_block <- matrix(0,nrow=nrow(design),ncol=ncol(design))
-        big_design <- matrix(0,nrow=0,ncol=m*ncol(design))
-        for(i in seq_len(m)) {
-            big_design <- rbind(big_design,
-                do.call(cbind,c(
-                    rep(list(zero_block), i-1),
-                    list(design),
-                    rep(list(zero_block), m-i)
-                ))
-            )
-        }
-
-        big_design
-    }
-    group_design <- memoise(group_design)
 
     fit_features <- function(i, cons=NULL, equality=FALSE, initial=NULL) {
         m <- sizes[i]
