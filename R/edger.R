@@ -60,7 +60,7 @@ edger_confects <- function(fit, coef=NULL, contrast=NULL, effect=NULL, fdr=0.05,
     confects$edger_fit <- fit
 
     if (!is.null(fit$genes)) {
-        confects$table <- cbind(confects$table, fit$genes[confects$table$index,])
+        confects$table <- cbind(confects$table, fit$genes[confects$table$index,,drop=FALSE])
     }
 
     confects
