@@ -205,7 +205,7 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01
     confects$limits <- effect$limits
 
     if (!is.null(eawp$probes)) {
-        confects$table <- cbind(confects$table, eawp$probes[confects$table$index,])
+        confects$table <- cbind(confects$table, eawp$probes[confects$table$index,,drop=FALSE])
     }
 
     confects
