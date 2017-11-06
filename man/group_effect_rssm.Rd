@@ -4,12 +4,14 @@
 \alias{group_effect_rssm}
 \title{Group effect for differential splicing}
 \usage{
-group_effect_rssm(design, coef)
+group_effect_rssm(design, coef, design_common = NULL)
 }
 \arguments{
 \item{design}{Design matrix.}
 
 \item{coef}{Column number in design matrix of the coefficient to be tested.}
+
+\item{design_common}{Experimental! Optional sample-level design matrix. For example, this can be used to account for a batch effect or matched samples.}
 }
 \value{
 A group effect object.

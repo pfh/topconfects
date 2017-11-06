@@ -9,17 +9,17 @@
 \alias{group_effect_shift_stepdown_log2}
 \title{Group effect for shifts in 5' or 3' end usage}
 \usage{
-group_effect_shift(design, coef1, coef2)
+group_effect_shift(design, coef1, coef2, design_common = NULL)
 
-group_effect_shift_stepup(design, coef1, coef2)
+group_effect_shift_stepup(design, coef1, coef2, design_common = NULL)
 
-group_effect_shift_stepdown(design, coef1, coef2)
+group_effect_shift_stepdown(design, coef1, coef2, design_common = NULL)
 
-group_effect_shift_log2(design, coef1, coef2)
+group_effect_shift_log2(design, coef1, coef2, design_common = NULL)
 
-group_effect_shift_stepup_log2(design, coef1, coef2)
+group_effect_shift_stepup_log2(design, coef1, coef2, design_common = NULL)
 
-group_effect_shift_stepdown_log2(design, coef1, coef2)
+group_effect_shift_stepdown_log2(design, coef1, coef2, design_common = NULL)
 }
 \arguments{
 \item{design}{Design matrix.}
@@ -27,6 +27,8 @@ group_effect_shift_stepdown_log2(design, coef1, coef2)
 \item{coef1}{Column number of coefficient for first condition in design matrix.}
 
 \item{coef2}{Column number of coefficient for second condition in design matrix.}
+
+\item{design_common}{Experimental! Optional sample-level design matrix. For example, this can be used to account for a batch effect or matched samples.}
 }
 \value{
 A group effect object.
