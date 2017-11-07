@@ -16,6 +16,11 @@ reference:
       - limma_nonlinear_confects
       - nest_confects
 
+  - title: Diagnostic plots
+    contents:
+      - ends_with("_plot")
+      - confects_plot_me
+
   - title: Non-linear effect size definitions
     desc: These can be used with edger_confects or limma_nonlinear_confects.
     contents:
@@ -27,12 +32,7 @@ reference:
       - edger_group_confects
 
   - title: Group effect size definitions
-    desc: These can be used with edger_group_confects.
+    desc: These can be used with edger_group_confects or limma_group_confects.
     contents:
       - starts_with("group_effect_")
-
-  - title: Diagnostic plots
-    contents:
-      - ends_with("_plot")
-      - confects_plot_me
 
