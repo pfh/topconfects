@@ -152,6 +152,8 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, step=0.01) {
 #' @param fdr False Discovery Rate to control for.
 #'
 #' @param step Granularity of log2 fold changes to test.
+#' 
+#' @param trend Should \code{eBayes(trend=TRUE)} be used?
 #'
 #' @return
 #'
@@ -160,10 +162,12 @@ edger_nonlinear_confects <- function(data, effect, fdr=0.05, step=0.01) {
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01) {
+limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01, trend=FALSE) {
     # TODO: missing values
     eawp <- getEAWP(object)
-    limma_fit <- lmFit(object, design) %>% eBayes()
+    limma_fit <- 
+        lmFit(object, design) %>% 
+        eBayes(trend=trend)
 
     y <- eawp$exprs
     if (is.null(eawp$weights))

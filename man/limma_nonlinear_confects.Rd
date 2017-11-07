@@ -4,7 +4,8 @@
 \alias{limma_nonlinear_confects}
 \title{Confident non-linear effect sizes using limma}
 \usage{
-limma_nonlinear_confects(object, design, effect, fdr = 0.05, step = 0.01)
+limma_nonlinear_confects(object, design, effect, fdr = 0.05, step = 0.01,
+  trend = FALSE)
 }
 \arguments{
 \item{object}{An expression matrix or EList object, or anything limma's lmFit will accept.}
@@ -16,6 +17,8 @@ limma_nonlinear_confects(object, design, effect, fdr = 0.05, step = 0.01)
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of log2 fold changes to test.}
+
+\item{trend}{Should \code{eBayes(trend=TRUE)} be used?}
 }
 \value{
 Technical note: Signed confects are based on TREAT-style p-values. Unsigned confects (generally with df>1) are based on comparing the best fit within the H0 region to the best fit overall, which may up to double p-values.
