@@ -4,7 +4,7 @@
 #'
 #' For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 #'
-#' \code{fit} should be produced using \code{lmFit}, optionally \code{contrasts.fit} if a contrast is needed, and then \code{eBayes}, as in normal limma usage. 
+#' \code{fit} should be produced using \code{lmFit}, and optionally \code{contrasts.fit} if a contrast is needed.
 #'
 #' @param fit A limma MArrayLM object.
 #'
@@ -13,13 +13,15 @@
 #' @param fdr False Discovery Rate to control for.
 #'
 #' @param step Granularity of log2 fold changes to test.
+#' 
+#' @param trend Should \code{treat(..., trend=TRUE)} be used?
 #'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01) {
+limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALSE) {
     assert_that(is(fit, "MArrayLM"), msg="fit must be an MArrayLM object")
     assert_that(!is.null(fit$df.prior), msg="Need to run eBayes first")
     
@@ -32,7 +34,7 @@ limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01) {
 
     pfunc <- function(i, mag) {
         top_treats <-
-            treat(fit, lfc=mag) %>%
+            treat(fit, lfc=mag, trend=trend) %>%
             topTreat(coef=coef, sort.by="none",n=n)
         top_treats$P.Value[i]
     }
