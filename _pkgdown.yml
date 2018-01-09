@@ -1,5 +1,5 @@
 
-templates:
+template:
   params:
     bootswatch: cerulean
 

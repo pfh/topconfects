@@ -11,7 +11,7 @@ document :
 	Rscript -e "devtools::document()"
 
 site : document
-	Rscript -e "pkgdown::build_site()"
+	echo "pkgdown::build_site()" |R --vanilla
 
 publish : 
 	scp -r docs/* logarithmic.net:www/topconfects/
