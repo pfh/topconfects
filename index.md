@@ -36,7 +36,9 @@ devtools::install_github("pfh/topconfects")
 
 ## Contact
 
-Author: Paul Harrison [@paulfharrison](https://twitter.com/paulfharrison) paul.harrison@monash.edu
+Topconfects is developed by Paul Harrison [@paulfharrison](https://twitter.com/paulfharrison) paul.harrison@monash.edu, for the [Monash Bioinformatics Platform](https://platforms.monash.edu/bioinformatics/).
+
+
 
 <br/>
 

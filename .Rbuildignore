@@ -1,9 +1,9 @@
 \.Rproj$
 ^\.Rproj\.user$
 ^docs
-^_pkgdown.yml$
+^_pkgdown\.yml$
 ^Makefile$
-^index.md$
+^index\.md$
 ^topconfects\.sublime
-
+^MBP-logo\.png$
 ^_pkgdown\.yml$
