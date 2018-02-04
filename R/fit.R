@@ -156,21 +156,21 @@ effect_contrast <- function(contrast) {
 }
 
 
-#' Ratio of contrasts effect.
-#'
-#' Ratio of two contrasts, i.e. \code{sum(contrast1*beta)/sum(contrast2*beta)}.
-#'
-#' @param contrast1 First contrast weights, a vector with the same length as the number of columns in the design matrix.
-#'
-#' @param contrast2 Second contrast weights, a vector with the same length as the number of columns in the design matrix.
-#'
-#' \code{sum(contrast2*beta)} should always produce a positive value.
-#'
-#' @return
-#'
-#' An object defining how to calculate an effect size.
-#' 
-#' @export
+# Ratio of contrasts effect.
+#
+# Ratio of two contrasts, i.e. \code{sum(contrast1*beta)/sum(contrast2*beta)}.
+#
+# @param contrast1 First contrast weights, a vector with the same length as the number of columns in the design matrix.
+#
+# @param contrast2 Second contrast weights, a vector with the same length as the number of columns in the design matrix.
+#
+# \code{sum(contrast2*beta)} should always produce a positive value.
+#
+# @return
+#
+# An object defining how to calculate an effect size.
+# 
+# @export
 effect_contrast_ratio <- function(contrast1, contrast2) {
     list(
         signed = TRUE,
@@ -190,19 +190,19 @@ effect_contrast_ratio <- function(contrast1, contrast2) {
 }
 
 
-#' Standard-deviation of a set of coefficients as effect size
-#'
-#' This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rssm, it is the root sum of squared differences from the mean. For effect_rss, it is simply the square root of the sum of squared coefficients.
-#'
-#' \code{effect_rssm} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
-#'
-#' @param coef The column numbers of the design matrix for the relevant coefficients.
-#'
-#' @return
-#'
-#' An object defining how to calculate an effect size.
-#'
-#' @export
+# Standard-deviation of a set of coefficients as effect size
+#
+# This is intended as the effect size version of an ANOVA. For effect_sd, the effect size is the standard deviation of some coefficients about their mean. For effect_rssm, it is the root sum of squared differences from the mean. For effect_rss, it is simply the square root of the sum of squared coefficients.
+#
+# \code{effect_rssm} may be better suited to comparing effect sizes from designs with differing numbers of coefficients, such as differential exon usage.
+#
+# @param coef The column numbers of the design matrix for the relevant coefficients.
+#
+# @return
+#
+# An object defining how to calculate an effect size.
+#
+# @export
 effect_sd <- function(coef) {
     n <- length(coef)
     assert_that(n > 1)   #n=2 case may be problematic
@@ -230,8 +230,8 @@ effect_sd <- function(coef) {
 }
 
 
-#' @rdname effect_sd
-#' @export
+# @rdname effect_sd
+# @export
 effect_rssm <- function(coef) {
     n <- length(coef)
     assert_that(n > 1)   #n=2 case may be problematic
@@ -259,8 +259,8 @@ effect_rssm <- function(coef) {
 }
 
 
-#' @rdname effect_sd
-#' @export
+# @rdname effect_sd
+# @export
 effect_rss <- function(coef) {
     list(
         signed = FALSE,
@@ -294,8 +294,8 @@ effect_rss <- function(coef) {
 #'
 #' Note that this effect size is not symmetric: \code{effect_shift_log2(c(1,2),c(3,4))} and \code{effect_shift_log2(c(1,3),c(2,4))} will give different results.
 #'
-#' The _stepdown and _stepup versions are for cumulative distributions. These are most useful in group effect form, where they can be used to examine shifts in start or end of transcriptions from RNA-seq or microarray data.
-#'
+# The _stepdown and _stepup versions are for cumulative distributions. These are most useful in group effect form, where they can be used to examine shifts in start or end of transcriptions from RNA-seq or microarray data.
+#
 #' @param coef1 Column numbers in the design matrix for the first condition, in some meaningful order.
 #'
 #' @param coef2 Corresponding column numbers for the second condition.
@@ -313,8 +313,8 @@ effect_shift <- function(coef1, coef2) {
     effect_shift_inner(n, sign_mat, coef1, coef2, c(-1,1))
 }
 
-#' @rdname effect_shift
-#' @export
+# @rdname effect_shift
+# @export
 effect_shift_stepdown <- function(coef1, coef2) {
     assert_that(length(coef1) == length(coef2))
     n <- length(coef1)
@@ -331,8 +331,8 @@ effect_shift_stepdown <- function(coef1, coef2) {
     effect_shift_inner(n, mat, coef1, coef2, NULL)
 }
 
-#' @rdname effect_shift
-#' @export
+# @rdname effect_shift
+# @export
 effect_shift_stepup <- function(coef1, coef2) {
     effect_shift_stepdown(rev(coef2), rev(coef1))
 }
@@ -375,33 +375,33 @@ effect_shift_inner <- function(n, mat, coef1, coef2, limits=NULL) {
 effect_shift_log2 <- function(coef1, coef2)
     effect_link_log2(effect_shift(coef1, coef2))
 
-#' @rdname effect_shift
-#' @export
+# @rdname effect_shift
+# @export
 effect_shift_stepdown_log2 <- function(coef1, coef2)
     effect_link_log2(effect_shift_stepdown(coef1, coef2))
 
-#' @rdname effect_shift
-#' @export
+# @rdname effect_shift
+# @export
 effect_shift_stepup_log2 <- function(coef1, coef2)
     effect_link_log2(effect_shift_stepup(coef1, coef2))
 
 
 
-#' Goodman and Kruskall's gamma, Yule's Q
-#'
-#' Goodman and Kruskall's gamma as an effect size. Yule's Q is a special case where coef1 and coef2 both have two coefficients, and is a symmetric effect size for the interaction of two experimental factors.
-#'
-#' \code{effect_gamma_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
-#'
-#' @param coef1 Column numbers in the design matrix for the first condition, in some meaningful order.
-#'
-#' @param coef2 Corresponding column numbers for the second condition.
-#'
-#' @return
-#'
-#' An object defining how to calculate an effect size.
-#'
-#' @export
+# Goodman and Kruskall's gamma, Yule's Q
+#
+# Goodman and Kruskall's gamma as an effect size. Yule's Q is a special case where coef1 and coef2 both have two coefficients, and is a symmetric effect size for the interaction of two experimental factors.
+#
+# \code{effect_gamma_log2} is adapted to work with log2 scaled coefficients. This is almost certainly the version you want.
+#
+# @param coef1 Column numbers in the design matrix for the first condition, in some meaningful order.
+#
+# @param coef2 Corresponding column numbers for the second condition.
+#
+# @return
+#
+# An object defining how to calculate an effect size.
+#
+# @export
 effect_gamma <- function(coef1, coef2) {
     assert_that(length(coef1) == length(coef2))
     n <- length(coef1)

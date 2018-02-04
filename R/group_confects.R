@@ -20,27 +20,27 @@ group_effect_1 <- function(design, coef, effect_func, design_common=NULL) {
         get_effect = get_effect)
 }
 
-#' Group effect for differential splicing
-#'
-#' Create a group effect object to detect differential splicing (or similar). The effect size is the root sum of squared differences of the coefficient from the mean.
-#'
-#' The coefficient should represent a difference between two conditions.
-#'
-#' The idea is to detect differences in differential expression between features in a group (ie exons in a gene).
-#'
-#' @param design Design matrix.
-#'
-#' @param coef Column number in design matrix of the coefficient to be tested.
-#'
-#' @param design_common Experimental! Optional sample-level design matrix. For example, this can be used to account for a batch effect or matched samples.
-#'
-#' @return
-#'
-#' A group effect object.
-#'
-#' @seealso \code{\link{effect_rssm}}
-#'
-#' @export
+# Group effect for differential splicing
+#
+# Create a group effect object to detect differential splicing (or similar). The effect size is the root sum of squared differences of the coefficient from the mean.
+#
+# The coefficient should represent a difference between two conditions.
+#
+# The idea is to detect differences in differential expression between features in a group (ie exons in a gene).
+#
+# @param design Design matrix.
+#
+# @param coef Column number in design matrix of the coefficient to be tested.
+#
+# @param design_common Experimental! Optional sample-level design matrix. For example, this can be used to account for a batch effect or matched samples.
+#
+# @return
+#
+# A group effect object.
+#
+# @seealso \code{\link{effect_rssm}}
+#
+# @export
 group_effect_rssm <- function(design, coef, design_common=NULL) 
     group_effect_1(design, coef, effect_rssm, design_common=design_common)
 
@@ -73,7 +73,7 @@ group_effect_2 <- function(design, coef1, coef2, effect_func, design_common=NULL
 #'
 #' The coefficients should represent the expression levels in two different conditions.
 #'
-#' The _stepup and _stepdown versions may be used to look for shifts in start or end of transcription from RNA-seq or microarray data, where the observed levels are expected to be cumulative or reverse cumulative.
+# The _stepup and _stepdown versions may be used to look for shifts in start or end of transcription from RNA-seq or microarray data, where the observed levels are expected to be cumulative or reverse cumulative.
 #'
 #' @param design Design matrix.
 #'
@@ -93,13 +93,13 @@ group_effect_2 <- function(design, coef1, coef2, effect_func, design_common=NULL
 group_effect_shift <- function(design, coef1, coef2, design_common=NULL) 
     group_effect_2(design, coef1, coef2, effect_shift, design_common=design_common)
 
-#' @rdname group_effect_shift
-#' @export
+# @rdname group_effect_shift
+# @export
 group_effect_shift_stepup <- function(design, coef1, coef2, design_common=NULL) 
     group_effect_2(design, coef1, coef2, effect_shift_stepup, design_common=design_common)
 
-#' @rdname group_effect_shift
-#' @export
+# @rdname group_effect_shift
+# @export
 group_effect_shift_stepdown <- function(design, coef1, coef2, design_common=NULL) 
     group_effect_2(design, coef1, coef2, effect_shift_stepdown, design_common=design_common)
 
@@ -108,13 +108,13 @@ group_effect_shift_stepdown <- function(design, coef1, coef2, design_common=NULL
 group_effect_shift_log2 <- function(design, coef1, coef2, design_common=NULL) 
     group_effect_2(design, coef1, coef2, effect_shift_log2, design_common=design_common)
 
-#' @rdname group_effect_shift
-#' @export
+# @rdname group_effect_shift
+# @export
 group_effect_shift_stepup_log2 <- function(design, coef1, coef2, design_common=NULL) 
     group_effect_2(design, coef1, coef2, effect_shift_stepup_log2, design_common=design_common)
 
-#' @rdname group_effect_shift
-#' @export
+# @rdname group_effect_shift
+# @export
 group_effect_shift_stepdown_log2 <- function(design, coef1, coef2, design_common=NULL) 
     group_effect_2(design, coef1, coef2, effect_shift_stepdown_log2, design_common=design_common)
 
@@ -154,7 +154,7 @@ group_design_maker <- function(design, design_common=NULL) {
     memoise(group_design)
 }
 
-#' Group confects (differential exon usage, etc)
+#' Group confects (differential 5' or 3' end usage, etc)
 #'
 #' Find differential exon usage, etc.
 #'

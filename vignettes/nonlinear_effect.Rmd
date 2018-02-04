@@ -45,9 +45,9 @@ counts <-
 # Retrieve symbol and description for each gene
 info <- AnnotationDbi::select(
     org.Sc.sgd.db::org.Sc.sgd.db, 
-    rownames(counts), c("GENENAME","DESCRIPTION")) 
+    rownames(counts), c("GENENAME")) 
 all(rownames(counts) == info$ORF)
-info <- select(info, GENENAME, DESCRIPTION) %>% as.data.frame
+info <- select(info, GENENAME) %>% as.data.frame
 rownames(info) <- rownames(counts)
 
 # Experiment design

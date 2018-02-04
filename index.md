@@ -1,6 +1,6 @@
 # | -●- Topconfects 
 
-TOP results by CONfident efFECT Size. Topconfects is an R package intended for RNA-seq or microarray Differntial Expression analysis and similar, where we are interested in placing confidence bounds on many effect sizes--one per gene--from few samples.
+TOP results by CONfident efFECT Size. Topconfects is an R package intended for RNA-seq or microarray Differntial Expression analysis and similar, where we are interested in placing confidence bounds on many effect sizes---one per gene---from few samples.
 
 Topconfects builds on [TREAT](http://bioinformatics.oxfordjournals.org/content/25/6/765.long) p-values offered by the limma and edgeR packages. It tries a range of fold changes, and uses this to rank genes by effect size while maintaining a given FDR. This also produces confidence bounds on the fold changes, with adjustment for multiple testing. See [nest_confects](reference/nest_confects.html) for details.
 
@@ -42,11 +42,13 @@ Topconfects is developed by Paul Harrison [@paulfharrison](https://twitter.com/p
 
 <br/>
 
+<!--
 ## Future work
 
 Gene-set enrichment tests. Here also the smallest p-value does not necessarily imply the greatest interest.
 
 <br/>
+-->
 
 ## References
 

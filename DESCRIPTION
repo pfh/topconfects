@@ -1,9 +1,9 @@
 Package: topconfects
 Title: Top Results by Confident Effect Size
-Version: 0.0.1
+Version: 1.0.1
 Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
 Description: Uses limma's treat or edgeR's glmTreat to rank genes (or other
-    features) by effect size.
+    features) by confident log2 fold change.
 Depends:
     R (>= 3.3.0)
 Imports:

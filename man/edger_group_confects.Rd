@@ -3,7 +3,7 @@
 \name{edger_group_confects}
 \alias{edger_group_confects}
 \alias{limma_group_confects}
-\title{Group confects (differential exon usage, etc)}
+\title{Group confects (differential 5' or 3' end usage, etc)}
 \usage{
 edger_group_confects(fit, group_id, group_effect, fdr = 0.05, step = 0.01)
 
