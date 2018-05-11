@@ -4,6 +4,7 @@ title: Test properties of limma-based routines
 
 ```{r}
 library(tidyverse)
+library(limma)
 devtools::load_all("..")
 
 n <- 100
@@ -18,31 +19,46 @@ mat
 
 design <- cbind(c(1,1,0,0), c(0,0,1,1))
 
-fit <- lmFit(mat, design) %>% 
-    eBayes()
+fit <- lmFit(mat, design)
+cfit <- contrasts.fit(fit, contrasts=c(-1,1))
 
-fit$df.prior
+eBayes(fit)$df.prior
 
+# Using our version of limma's treat
+confects_standard <- limma_confects(cfit, coef=1)
 # Using limma's treat
-confects <- limma_confects(fit, contrast=c(-1,1))
+confects_limma <- topconfects:::limma_confects_limma(cfit, coef=1)
 # Using topconfects TREAT-like method
 confects_nl <- limma_nonlinear_confects(mat, design, effect=effect_contrast(c(-1,1)))
 
-confects
+confects_standard
+confects_limma
 confects_nl
 
 confects_plot(confects_nl, n=50)
 confects_plot_me(confects_nl)
 
 # Compare ranking
-plot(order(confects$table$index), order(confects_nl$table$index))
+plot(order(confects_standard$table$index), order(confects_nl$table$index))
+```
+
+Our version of limma TREAT and limma's native TREAT p values should be identical.
+
+```{r}
+for(lfc in c(0.5, 1.0, 2.0)) {
+    p <- confects_standard$pfunc(1:n, lfc)
+    p_limma <- confects_limma$pfunc(1:n, lfc)
+    print(identical(p, p_limma))
+    plot(p, p_limma, main=paste("lfc",lfc))
+    abline(0,1)
+}
 ```
 
 Topconfects TREAT-like and limma TREAT p values should be very similar. Topconfects p values will be slightly larger, since it uses a method that also determines the sign of the effect. Topconfects does not attempt to compute p values where the |estimate| is less than the specified effect size, so these are all set to 1.
 
 ```{r}
 for(lfc in c(0.5, 1.0, 2.0)) {
-    p <- confects$pfunc(1:n, lfc)
+    p <- confects_standard$pfunc(1:n, lfc)
     p_nl <- confects_nl$pfunc(1:n, lfc)
     plot(p, p_nl, main=paste("lfc",lfc))
     abline(0,1)

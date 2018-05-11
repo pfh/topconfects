@@ -7,3 +7,4 @@
 ^topconfects\.sublime
 ^MBP-logo\.png$
 ^_pkgdown\.yml$
+^test_rmds

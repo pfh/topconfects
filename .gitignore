@@ -28,4 +28,5 @@ vignettes/*.pdf
 .Rproj.user
 inst/doc
 /tests/*.html
+/test_rmds/*.html
 

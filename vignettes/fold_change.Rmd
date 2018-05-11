@@ -80,10 +80,7 @@ design[,]
 
 fit <-
     voom(y, design) %>%
-    lmFit(design) %>%
-    eBayes()
-
-fit$df.prior
+    lmFit(design)
 ```
 
 ### Apply topconfects
@@ -105,7 +102,7 @@ Here the usual `logFC` values estimated by `limma` are shown as dots, with lines
 confects_plot(confects)
 ```
 
-`confects_plot_me` overlays the confects (black) on a Mean-Difference Plot (white) (as might be produced by `limma::plotMD`). As we should expect, the very noisy differences with low mean expression are removed if we look at the confects.
+`confects_plot_me` overlays the confects (black) on a Mean-Difference Plot (grey) (as might be produced by `limma::plotMD`). As we should expect, the very noisy differences with low mean expression are removed if we look at the confects.
 
 ```{r}
 confects_plot_me(confects)
@@ -114,7 +111,8 @@ confects_plot_me(confects)
 Let's compare this to the ranking we obtain from `topTable`.
 
 ```{r, fig.height=7}
-top <- topTable(fit, coef=4, n=Inf)
+fit_eb <- eBayes(fit)
+top <- topTable(fit_eb, coef=4, n=Inf)
 
 rank_rank_plot(confects$table$name, rownames(top), "limma_confects", "topTable")
 ```

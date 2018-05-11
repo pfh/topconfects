@@ -24,5 +24,5 @@ See \code{\link{nest_confects}} for details of how to interpret the result.
 For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 }
 \details{
-\code{fit} should be produced using \code{lmFit}, and optionally \code{contrasts.fit} if a contrast is needed.
+\code{fit} should be produced using \code{lmFit}, and optionally \code{contrasts.fit} if a contrast is needed. It is not necessary to use \code{eBayes}, this function calls \code{eBayes} itself.
 }
