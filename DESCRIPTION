@@ -1,5 +1,5 @@
-Package: topconfects
-Title: Top Results by Confident Effect Size
+Package: topconfects_ql
+Title: Top Results by Confident Effect Size, Quasi-Likelihood branch
 Version: 1.0.1
 Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
 Description: Uses limma's treat or edgeR's glmTreat to rank genes (or other
