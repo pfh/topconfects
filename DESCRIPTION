@@ -1,4 +1,4 @@
-Package: topconfects_ql
+Package: topconfectsql
 Title: Top Results by Confident Effect Size, Quasi-Likelihood branch
 Version: 1.0.1
 Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
