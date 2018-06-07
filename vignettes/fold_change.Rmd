@@ -31,7 +31,7 @@ if (params$cache)
 
 
 ```{r load, message=FALSE, warning=FALSE}
-library(topconfects)
+library(topconfectsql)
 
 library(NBPSeq)
 library(edgeR)

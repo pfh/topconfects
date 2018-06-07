@@ -28,7 +28,7 @@ if (params$cache)
 ```
 
 ```{r load, message=FALSE, warning=FALSE}
-library(topconfects)
+library(topconfectsql)
 
 library(reshape2)
 library(dplyr)
@@ -142,7 +142,7 @@ Let's try to identify genes where the response to salt stress is different in th
 
 This contrast on the log-linear model will search for genes where 
 
-> `(mutant_salt/mutant_none)/(wt_salt/wt_none) != 0`
+> `(mutant_salt/mutant_none)/(wt_salt/wt_none) != 1`
 
 ```{r edger_test}
 top <- fit %>%

@@ -15,9 +15,12 @@ rmd_tests :
 document :
 	Rscript -e "devtools::document()"
 
-site : document
-	echo "pkgdown::build_site()" |R --vanilla
+#site : document
+#	echo "pkgdown::build_site()" |R --vanilla
 
 #publish : 
 #	scp -r docs/* logarithmic.net:www/topconfects/
 
+# Documentation file building:
+# devtools:::build_manual(path=".")
+# devtools:::build_vignettes()

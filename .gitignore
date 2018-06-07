@@ -29,4 +29,4 @@ vignettes/*.pdf
 inst/doc
 /tests/*.html
 /test_rmds/*.html
-
+*.pdf
