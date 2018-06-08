@@ -1,8 +1,8 @@
 
-# Check limma_confects exactly matches topconfects:::limma_confects_limma
+# Check limma_confects exactly matches topconfectsql:::limma_confects_limma
 
 library(limma)
-library(topconfects)
+library(topconfectsql)
 
 set.seed(1234)
 n <- 100
@@ -21,7 +21,7 @@ cfit <- contrasts.fit(fit, contrasts=c(-1,1))
 # Using our version of limma's treat
 confects_standard <- limma_confects(cfit, coef=1)
 # Using limma's treat function
-confects_limma <- topconfects:::limma_confects_limma(cfit, coef=1)
+confects_limma <- topconfectsql:::limma_confects_limma(cfit, coef=1)
 
 # Tables should match exactly
 stopifnot(identical(confects_standard$table, confects_limma$table))

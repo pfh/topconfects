@@ -52,7 +52,7 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
         mag <- mag + step
     }
 
-    result <- new("Topconfects", list(
+    new("Topconfects", list(
         table=data.frame(rank=seq_len(n), index=indices, confect=mags),
         effect_desc = "effect size",
         fdr=fdr, step=step, pfunc=pfunc))
