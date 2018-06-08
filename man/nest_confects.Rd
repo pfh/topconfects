@@ -37,3 +37,12 @@ Some wrappers around this function may add a sign to the \code{confect} column, 
 \description{
 Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate for each set.
 }
+\examples{
+
+# Find largest positive z-scores in a collection, 
+# and place confidence bounds on them that maintain FDR 0.05.
+z <- c(1,2,3,4,5)
+pfunc <- function(i, effect_size) pnorm(z[i], mean=effect_size, lower.tail=FALSE)
+nest_confects(length(z), pfunc, fdr=0.05)
+
+}

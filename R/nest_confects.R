@@ -30,6 +30,14 @@
 #'
 #' Some wrappers around this function may add a sign to the \code{confect} column, if it makes sense to do so. They will also generally add an \code{effect} column, containing an estimate of the effect size that aims to be unbiassed rather than a conservative lower bound.
 #'
+#' @examples
+#'
+#' # Find largest positive z-scores in a collection, 
+#' # and place confidence bounds on them that maintain FDR 0.05.
+#' z <- c(1,2,3,4,5)
+#' pfunc <- function(i, effect_size) pnorm(z[i], mean=effect_size, lower.tail=FALSE)
+#' nest_confects(length(z), pfunc, fdr=0.05)
+#'
 #' @export
 nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
     indices <- seq_len(n)
@@ -52,7 +60,7 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
         mag <- mag + step
     }
 
-    result <- new("Topconfects", list(
+    new("Topconfects", list(
         table=data.frame(rank=seq_len(n), index=indices, confect=mags),
         effect_desc = "effect size",
         fdr=fdr, step=step, pfunc=pfunc))

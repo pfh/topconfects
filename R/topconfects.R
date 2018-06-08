@@ -1,4 +1,27 @@
 
+
+#
+# Topconfects result class definition
+#
+
+methods::setClass("Topconfects", methods::representation("list"))
+
+methods::setMethod("show", "Topconfects", function(object) {
+    cat("$table\n")
+    print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
+    if (nrow(object$table) > 10) cat("...\n")
+    cat(confects_description(object))
+})
+
+first_match <- function(avail, options, default=NULL) {
+    good <- options[options %in% avail]
+    if (length(good) == 0) return(default)
+    good[1]
+}
+
+#
+# Describe some key numbers from a result (used by show()).
+#
 confects_description <- function(confects) {
     result <- paste0(
        sum(!is.na(confects$table$confect)),
@@ -26,21 +49,6 @@ confects_description <- function(confects) {
 }
 
 
-
-methods::setClass("Topconfects", methods::representation("list"))
-
-methods::setMethod("show", "Topconfects", function(object) {
-    cat("$table\n")
-    print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
-    if (nrow(object$table) > 10) cat("...\n")
-    cat(confects_description(object))
-})
-
-first_match <- function(avail, options, default=NULL) {
-    good <- options[options %in% avail]
-    if (length(good) == 0) return(default)
-    good[1]
-}
 
 
 #' Top confident effect sizes plot
@@ -89,9 +97,9 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     negative <- !is.na(tab$confect) & tab$effect < 0
     tab$confect_to[negative] <- tab$confect[negative]
 
-    p <- tab %>%
-        mutate_(name =~ factor(name,rev(name))) %>%
-        ggplot(aes_string(y="name", x="effect")) +
+    tab$name <- factor(tab$name,rev(tab$name))
+
+    p <- ggplot(tab, aes_string(y="name", x="effect")) +
         geom_vline(xintercept=0) +
         geom_segment(aes_string(yend="name", x="confect_from", xend="confect_to")) +
         geom_point(aes_string(size=mag_col)) +
@@ -148,12 +156,12 @@ confects_plot_me <- function(confects) {
 #'
 #' @export
 rank_rank_plot <- function(vec1, vec2, label1="First ranking", label2="Second ranking", n=40) {
-    vec1 <- head(vec1, n)
-    vec2 <- head(vec2, n)
+    vec1 <- as.character( head(vec1, n) )
+    vec2 <- as.character( head(vec2, n) )
 
-    df1 <- data_frame(rank1=seq_len(length(vec1)), name=vec1)
-    df2 <- data_frame(rank2=seq_len(length(vec2)), name=vec2)
-    link <- inner_join(df1, df2, "name")
+    df1 <- data.frame(rank1=seq_len(length(vec1)), name=vec1, stringsAsFactors=FALSE)
+    df2 <- data.frame(rank2=seq_len(length(vec2)), name=vec2, stringsAsFactors=FALSE)
+    link <- merge(df1, df2, by="name")
     p <- ggplot(link) +
         geom_segment(aes_string(x="1", xend="2", y="rank1", yend="rank2")) +
         geom_point(aes_string(x="1", y="rank1")) +

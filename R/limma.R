@@ -1,6 +1,6 @@
 
 
-#' Confident log2 fold changes using limma's treat function, linear effects only
+#' Confident log2 fold changes based on a limma fit object.
 #'
 #' For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
 #'
@@ -34,26 +34,31 @@ limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALSE) {
     fit <- eBayes(fit, trend=trend)
 
     # Based on limma::treat()
-    acoef <- abs(fit$coefficients[,coef])
-    se <- fit$stdev.unscaled[,coef] * sqrt(fit$s2.post)
-    df_total <- fit$df.total
+    #acoef <- abs(fit$coefficients[,coef])
+    #se <- fit$stdev.unscaled[,coef] * sqrt(fit$s2.post)
+    #df_total <- fit$df.total
 
-    pfunc <- function(i, mag) {
-        acoef_i <- acoef[i]
-        se_i <- se[i]
-        df_total_i <- df_total[i]
+    # pfunc <- function(i, mag) {
+    #     acoef_i <- acoef[i]
+    #     se_i <- se[i]
+    #     df_total_i <- df_total[i]
 
-        tstat_right <- (acoef_i-mag)/se_i
-        tstat_left <- (acoef_i+mag)/se_i
+    #     tstat_right <- (acoef_i-mag)/se_i
+    #     tstat_left <- (acoef_i+mag)/se_i
 
-        pt(tstat_right, df=df_total_i,lower.tail=FALSE) + 
-            pt(tstat_left,df=df_total_i,lower.tail=FALSE)
-    }
+    #     pt(tstat_right, df=df_total_i,lower.tail=FALSE) + 
+    #         pt(tstat_left,df=df_total_i,lower.tail=FALSE)
+    # }
 
-    confects <- nest_confects(n, pfunc, fdr=fdr, step=step)
-    logFC <- fit$coefficients[confects$table$index, coef]
-    confects$table$confect <- sign(logFC) * confects$table$confect
-    confects$table$effect <- logFC
+    # confects <- nest_confects(n, pfunc, fdr=fdr, step=step)
+    #logFC <- fit$coefficients[confects$table$index, coef]
+    #confects$table$confect <- sign(logFC) * confects$table$confect
+    #confects$table$effect <- logFC
+
+    effect <- fit$coefficients[,coef]
+    sd <- fit$stdev.unscaled[,coef] * sqrt(fit$s2.post)
+    df <- fit$df.total
+    confects <- normal_confects(effect, sd, df, fdr=fdr, step=step)
 
     confects$table$AveExpr <- fit$Amean[confects$table$index]
     if (!is.null(rownames(fit)))
@@ -86,9 +91,8 @@ limma_confects_limma <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALS
     n <- nrow(fit)
 
     pfunc <- function(i, mag) {
-        top_treats <-
-            treat(fit, lfc=mag, trend=trend) %>%
-            topTreat(coef=coef, sort.by="none",n=n)
+        tested <- treat(fit, lfc=mag, trend=trend)
+        top_treats <- topTreat(tested, coef=coef, sort.by="none",n=n)
         top_treats$P.Value[i]
     }
 

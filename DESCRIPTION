@@ -1,9 +1,8 @@
 Package: topconfects
-Title: Top Results by Confident Effect Size
-Version: 1.0.1
+Title: Top Confident Effect Sizes
+Version: 1.1.1
 Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
-Description: Uses limma's treat or edgeR's glmTreat to rank genes (or other
-    features) by confident log2 fold change.
+Description: Find the largest confident effect sizes from a large collection, while maintaining False Discovery Rate control. The main application is differential gene expression analysis, providing genes ranked in order of confident log2 fold change.
 Depends:
     R (>= 3.3.0)
 Imports:
@@ -11,16 +10,12 @@ Imports:
     utils,
     stats,
     assertthat,
-    magrittr,
-    dplyr,
-    purrr,
     ggplot2,
     limma,
-    edgeR,
-    nloptr,
-    memoise
+    edgeR
 Suggests:
     NBPSeq,
+    dplyr,
     testthat,
     knitr,
     rmarkdown,

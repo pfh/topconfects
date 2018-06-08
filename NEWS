@@ -1,0 +1,6 @@
+
+1.1.1 
+- Code to do with non-linear effect sizes has been move to the "ql" branch on github, pending publication of the basic method and a possible rethink and use of a simpler method.
+
+1.0.1
+- Initial release.

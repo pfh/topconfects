@@ -4,10 +4,10 @@
 \alias{normal_confects}
 \title{Confident effect sizes from from normal or t distributions}
 \usage{
-normal_confects(mean, sd = 1, df = Inf, fdr = 0.05, step = 0.01)
+normal_confects(effect, sd, df = Inf, fdr = 0.05, step = 0.01)
 }
 \arguments{
-\item{mean}{A vector of means.}
+\item{effect}{A vector of estimated effects.}
 
 \item{sd}{A single or vector of standard deviations (or if t distribution, scales).}
 
@@ -21,5 +21,5 @@ normal_confects(mean, sd = 1, df = Inf, fdr = 0.05, step = 0.01)
 See \code{\link{nest_confects}} for details of how to interpret the result.
 }
 \description{
-A general purpose confident effect size function for where a normal or t distribution can be assumed. Calculates confident effect sizes based on a mean and standard deviation (normal distribution) or mean and scale (t distribution).
+A general purpose confident effect size function for where a normal or t distribution of errors can be assumed. Calculates confident effect sizes based on an estimated effect and standard deviation (normal distribution), or mean and scale (t distribution).
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/limma.R
 \name{limma_confects}
 \alias{limma_confects}
-\title{Confident log2 fold changes using limma's treat function, linear effects only}
+\title{Confident log2 fold changes based on a limma fit object.}
 \usage{
 limma_confects(fit, coef = NULL, fdr = 0.05, step = 0.01, trend = FALSE)
 }

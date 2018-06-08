@@ -10,7 +10,6 @@ check :
 rmd_tests :
 	Rscript -e "rmarkdown::render('test_rmds/test_limma.Rmd')"
 	Rscript -e "rmarkdown::render('test_rmds/test_edgeR.Rmd')"
-	Rscript -e "rmarkdown::render('test_rmds/test_shift_effect.Rmd')"
 
 document :
 	Rscript -e "devtools::document()"

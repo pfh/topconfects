@@ -1,8 +1,10 @@
 ---
-title: Test properties of edgeR-based routines
+title: Test edgeR-based routines
 ---
 
 ```{r}
+set.seed(1234)
+
 library(tidyverse)
 library(edgeR)
 devtools::load_all("..")
@@ -28,27 +30,9 @@ fit <- glmQLFit(y, design)
 
 fit$df.prior
 
-# Using edgeR's glmTreat
 confects <- edger_confects(fit, contrast=c(-1,1))
-# Using topconfects TREAT-like method
-confects_nl <- edger_confects(fit, effect=effect_contrast(c(-1,1)))
-
 confects
-confects_nl
 
-# Compare ranking
-plot(order(confects$table$index), order(confects_nl$table$index))
+confects$table
 ```
-
-Topconfects TREAT-like and edgeR TREAT p values should be similar. Topconfects p values will be slightly larger, since it uses a method that also determines the sign of the effect. Topconfects does not attempt to compute p values where the |estimate| is less than the specified effect size, so these are all set to 1.
-
-```{r}
-for(lfc in c(0.5, 1.0, 2.0)) {
-    p <- confects$pfunc(1:n, lfc)
-    p_nl <- confects_nl$pfunc(1:n, lfc)
-    plot(p, p_nl, main=paste("lfc",lfc))
-    abline(0,1)
-}
-```
-
 
