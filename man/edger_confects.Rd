@@ -24,5 +24,8 @@ edger_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05,
 See \code{\link{nest_confects}} for details of how to interpret the result.
 }
 \description{
-For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
+For all possible absolute log2 fold changes (LFC), which genes have at least this fold change at a specified False Discovery Rate?
+}
+\details{
+Results are presented in a table such that for any given LFC, if the reader chooses the genes with abs(confect) less than this they are assured that this set of genes has at least this LFC (with the specified FDR). The confect column may also be viewed as a confidence bound on the LFC of each gene, with a dynamic correction for multiple testing.
 }

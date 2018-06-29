@@ -11,22 +11,16 @@ params:
     cache: !r FALSE
 ---
 
-<!--
-devtools::load_all(".") ; rmarkdown::render("vignettes/fold_change.Rmd", intermediates_dir="/tmp", output_dir="/tmp", clean=FALSE, params=list(cache=TRUE))
--->
-
 <style>
 .contents h2 { margin-top: 2em }
 </style>
 
-This document shows typical Topconfects usage.
+This document shows typical Topconfects usage with limma, edgeR, or DESeq2.
 
 The first step is to load a dataset. Here, we're looking at RNA-seq data that investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental and control conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.width=7, fig.height=6)
-if (params$cache)
-    knitr::opts_chunk$set(cache=TRUE, autodep=TRUE, cache.path="/tmp/fold_change_cache")
 ```
 
 
@@ -130,7 +124,7 @@ plotMD(fit, legend="bottomleft", status=paste0(
 
 ## edgeR analysis
 
-An analysis in edgeR produces similar results.
+An analysis in edgeR produces similar results. Note that only quasi-likelihood testing from edgeR is supported.
 
 ### Standard edgeR analysis
 
@@ -152,6 +146,7 @@ econfects
 
 ```{r fig.height=7}
 confects_plot(econfects)
+confects_plot_me(econfects)
 ```
 
 ```{r}
@@ -164,10 +159,54 @@ plotMD(efit, legend="bottomleft", status=paste0(
     ifelse(rownames(efit) %in% rownames(etop)[1:40], "topTags ","")))
 ```
 
-### Comparing limma and edgeR results
+
+## DESeq2 analysis
+
+DESeq2 does its own filtering of lowly expressed genes, so we start from the original count matrix. The initial steps are as for a normal DESeq2 analysis.
+
+```{r message=F, warning=F}
+library(DESeq2)
+
+dds <- DESeqDataSetFromMatrix(
+    countData = arab,
+    colData = data.frame(Time, Treat),
+    rowData = arab_info,
+    design = ~Time+Treat)
+
+dds <- DESeq(dds)
+```
+
+### Apply topconfects
+
+The contrast or coefficient to test is specified as in the `DESeq2::results` function.
+
+```{r}
+dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock")
+
+dconfects
+```
+
+DESeq2 filters some genes, these are placed last in the table. If your intention is to obtain a ranking of all genes, you should disable this with `deseq2_confects(..., cooksCutoff=Inf, independentFiltering=FALSE)`.
+
+```{r}
+table(dconfects$table$filtered)
+tail(dconfects$table)
+```
+
+### Looking at the result
+
+```{r fig.height=7}
+confects_plot(dconfects)
+confects_plot_me(dconfects)
+```
+
+
+## Comparing results
 
 ```{r fig.height=7}
 rank_rank_plot(confects$table$name, econfects$table$name, "limma confects", "edgeR confects")
+rank_rank_plot(confects$table$name, dconfects$table$name, "limma confects", "DESeq2 confects")
+rank_rank_plot(econfects$table$name, dconfects$table$name, "edgeR confects", "DESeq2 confects")
 ```
 
 ---

@@ -1,8 +1,10 @@
 
 
-#' Confident log2 fold changes based on a limma fit object.
+#' Confident log2 fold changes based on a limma fit object
 #'
-#' For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate?
+#' For all possible absolute log2 fold changes (LFC), which genes have at least this fold change at a specified False Discovery Rate?
+#'
+#' Results are presented in a table such that for any given LFC, if the reader chooses the genes with abs(confect) less than this they are assured that this set of genes has at least this LFC (with the specified FDR). The confect column may also be viewed as a confidence bound on the LFC of each gene, with a dynamic correction for multiple testing.
 #'
 #' \code{fit} should be produced using \code{lmFit}, and optionally \code{contrasts.fit} if a contrast is needed. It is not necessary to use \code{eBayes}, this function calls \code{eBayes} itself.
 #'
@@ -31,7 +33,7 @@ limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALSE) {
 
     n <- nrow(fit)
 
-    fit <- eBayes(fit, trend=trend)
+    fit <- limma::eBayes(fit, trend=trend)
 
     # Based on limma::treat()
     #acoef <- abs(fit$coefficients[,coef])
@@ -91,8 +93,8 @@ limma_confects_limma <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALS
     n <- nrow(fit)
 
     pfunc <- function(i, mag) {
-        tested <- treat(fit, lfc=mag, trend=trend)
-        top_treats <- topTreat(tested, coef=coef, sort.by="none",n=n)
+        tested <- limma::treat(fit, lfc=mag, trend=trend)
+        top_treats <- limma::topTreat(tested, coef=coef, sort.by="none",n=n)
         top_treats$P.Value[i]
     }
 

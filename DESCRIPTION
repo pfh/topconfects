@@ -1,6 +1,6 @@
 Package: topconfects
 Title: Top Confident Effect Sizes
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
 Description: Find the largest confident effect sizes from a large collection, while maintaining False Discovery Rate control. The main application is differential gene expression analysis, providing genes ranked in order of confident log2 fold change.
 Depends:
@@ -10,10 +10,11 @@ Imports:
     utils,
     stats,
     assertthat,
-    ggplot2,
-    limma,
-    edgeR
+    ggplot2
 Suggests:
+    limma,
+    edgeR,
+    DESeq2,
     NBPSeq,
     dplyr,
     testthat,
@@ -23,7 +24,6 @@ Suggests:
     tidyr,
     readr,
     org.At.tair.db,
-    org.Sc.sgd.db,
     AnnotationDbi
 License: LGPL-2.1 | file LICENSE
 URL: https://github.com/pfh/topconfects

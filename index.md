@@ -3,20 +3,21 @@
 
 TOP results by CONfident efFECT Size. Topconfects is an R package intended for RNA-seq or microarray Differntial Expression analysis and similar, where we are interested in placing confidence bounds on many effect sizes---one per gene---from few samples, and ranking genes by these confident effect sizes.
 
-Topconfects builds on [TREAT](http://bioinformatics.oxfordjournals.org/content/25/6/765.long) p-values offered by the limma and edgeR packages. It tries a range of fold changes, and uses this to rank genes by effect size while maintaining a given FDR. This also produces confidence bounds on the fold changes, with adjustment for multiple testing. See [nest_confects](reference/nest_confects.html) for details.
-
-<br/>
+Topconfects builds on [TREAT](http://bioinformatics.oxfordjournals.org/content/25/6/765.long) p-values offered by the limma and edgeR packages, or the "greaterAbs" test p-values offered by DESeq2. It tries a range of fold changes, and uses this to rank genes by effect size while maintaining a given FDR. This also produces confidence bounds on the fold changes, with adjustment for multiple testing.
 
 * **A principled way to avoid using p-values as a proxy for effect size.** The difference between a p-value of 1e-6 and 1e-9 has no practical meaning in terms of significance, however tiny p-values are often used as a proxy for effect size. This is a misuse, as they might simply reflect greater quality of evidence (for example RNA-seq average read count or microarray average spot intensity). It is better to reject a broader set of hypotheses, while maintaining a sensible significance level.
 
 * **No need to guess the best fold change cutoff.** TREAT requires a fold change cutoff to be specified. Topconfects instead asks you specify a False Discovery Rate appropriate to your purpose. You can then read down the resulting ranked list of genes as far as you wish. The "confect" value given in the last row that you use is the fold change cutoff required for TREAT to produce that set of genes at the given FDR.
 
+The method is described in:
+
+[Harrison PF, Pattison AD, Powell DR, Beilharz TH. 2018. Topconfects: a package for confident effect sizes in differential expression analysis provides improved usability ranking genes of interest. bioRxiv. doi:10.1101/343145](https://www.biorxiv.org/content/early/2018/06/11/343145)
 
 <br/>
 
 ## Usage
 
-Use [limma_confects](reference/limma_confects.html) or [edger_confects](reference/edger_confects.html) as part of your limma or edgeR analysis.
+Use [limma_confects](reference/limma_confects.html), [edger_confects](reference/edger_confects.html), or [deseq2_confects](reference/deseq2_confects.html) as part of your limma, edgeR, or DESeq2 analysis.
 
 * [Example RNA-seq analysis](articles/fold_change.html)
 

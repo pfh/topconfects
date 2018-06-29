@@ -14,7 +14,10 @@ rmd_tests :
 document :
 	Rscript -e "devtools::document()"
 
-site : document
+install : document
+	Rscript -e "devtools::install()"
+
+site : install
 	echo "pkgdown::build_site()" |R --vanilla
 
 publish : 

@@ -13,6 +13,7 @@ reference:
     contents:
       - limma_confects
       - edger_confects
+      - deseq2_confects
       - normal_confects
       - nest_confects
 

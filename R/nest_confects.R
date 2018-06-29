@@ -43,9 +43,10 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 
-    mag <- 0.0
+    steps <- 0
     n_active <- n
     while(n_active > 0) {
+        mag <- steps * step
         seq_active <- seq_len(n_active)
         p <- pfunc(indices[seq_active], mag)
         ordering <- order(p)
@@ -57,7 +58,7 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
             n_active <- n_active - 1
 
         mags[seq_len(n_active)] <- mag
-        mag <- mag + step
+        steps <- steps + 1
     }
 
     new("Topconfects", list(

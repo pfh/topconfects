@@ -70,7 +70,12 @@ confects_description <- function(confects) {
 #' @export
 confects_plot <- function(confects, n=50, limits=NULL) {
     tab <- head(confects$table, n)
-    mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
+    mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+
+    if (identical(mag_col,"baseMean"))
+        mag_scale <- "log10"
+    else
+        mag_scale <- "identity"
 
     if (is.null(limits))
         limits <- confects$limits
@@ -107,12 +112,15 @@ confects_plot <- function(confects, n=50, limits=NULL) {
         labs(x = confects$effect_desc) +
         theme_bw()
 
+    if (identical(mag_col,"baseMean"))
+        p <- p + scale_size(trans="log10")
+
     p
 }
 
 #' Mean-expression vs effect size plot
 #'
-#' Like plotMD in limma, but shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in grey). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
+#' Like plotMD in limma, plots effect size against mean expression level. However shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in grey). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
 #'
 #' @param confects A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.
 #'
@@ -123,7 +131,9 @@ confects_plot <- function(confects, n=50, limits=NULL) {
 #' @export
 confects_plot_me <- function(confects) {
     tab <- confects$table
-    mag_col <- first_match(c("logCPM", "AveExpr"), names(tab))
+    mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+
+    assert_that(!is.null(mag_col), msg="No mean expression column available.")
 
     p <- ggplot(tab, aes_string(x=mag_col)) +
         geom_point(aes_string(y="effect"), color="#cccccc") +
@@ -131,6 +141,9 @@ confects_plot_me <- function(confects) {
         geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
         labs(y = confects$effect_desc) +
         theme_bw()
+
+    if (identical(mag_col,"baseMean"))
+        p <- p + scale_x_continuous(trans="log10")
 
     p
 }
