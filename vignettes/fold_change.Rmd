@@ -182,6 +182,13 @@ The contrast or coefficient to test is specified as in the `DESeq2::results` fun
 
 ```{r}
 dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock")
+```
+
+DESeq2 offers shrunken estimates of LFC. This is another sensible way of ranking genes. Let's compare them to the confect values.
+
+```{r}
+shrunk <- lfcShrink(dds, coef="Treat_hrcc_vs_mock", type="ashr")
+dconfects$table$shrunk <- shrunk$log2FoldChange[dconfects$table$index]
 
 dconfects
 ```
@@ -195,11 +202,21 @@ tail(dconfects$table)
 
 ### Looking at the result
 
+Shrunk LFC estimates are shown in red.
+
 ```{r fig.height=7}
-confects_plot(dconfects)
-confects_plot_me(dconfects)
+confects_plot(dconfects) + 
+    geom_point(aes(x=shrunk, size=baseMean, color="lfcShrink"), alpha=0.75)
 ```
 
+`lfcShrink` aims for a best estimate of the LFC, whereas confect is a conservative estimate. `lfcShrink` can produce non-zero values for genes which can't be said to significantly differ from zero -- it doesn't do double duty as an indication of significance -- whereas the confect value will be `NA` in this case. The plot below compares these two quantities. Only un-filtered genes are shown (see above).
+
+```{r}
+filter(dconfects$table, !filtered) %>%
+ggplot(aes(x=ifelse(is.na(confect),0,confect), y=shrunk, color=!is.na(confect))) +
+    geom_point() + geom_abline() + coord_fixed() + theme_bw() +
+    labs(color="Significantly\nnon-zero at\nFDR 0.05", x="confect", y="lfcShrink using ashr")
+```
 
 ## Comparing results
 
