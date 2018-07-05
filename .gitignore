@@ -1,6 +1,7 @@
 /docs
 .*
 *.sublime-*
+*.Rproj
 # History files
 .Rhistory
 .Rapp.history
