@@ -23,7 +23,7 @@
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALSE) {
+limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE) {
     assert_that(is(fit, "MArrayLM"), msg="fit must be an MArrayLM object")
     
     if (is.null(coef) && ncol(fit$coefficients) == 1)
@@ -82,7 +82,7 @@ limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALSE) {
 #
 # Version of limma_confects using the limma treat function.
 #
-limma_confects_limma <- function(fit, coef=NULL, fdr=0.05, step=0.01, trend=FALSE) {
+limma_confects_limma <- function(fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE) {
     assert_that(is(fit, "MArrayLM"), msg="fit must be an MArrayLM object")
     
     if (is.null(coef) && ncol(fit$coefficients) == 1)

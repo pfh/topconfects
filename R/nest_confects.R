@@ -39,7 +39,7 @@
 #' nest_confects(length(z), pfunc, fdr=0.05)
 #'
 #' @export
-nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
+nest_confects <- function(n, pfunc, fdr=0.05, step=0.001) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 

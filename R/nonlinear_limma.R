@@ -17,7 +17,7 @@ clean_design_matrix <- function(design) {
 
 # Helper function: extract y and weights, use limma to calculate variance moderation (non-trended)
 make_context <- function(object, design) {
-    eawp <- getEAWP(object)
+    eawp <- limma::getEAWP(object)
     y <- eawp$exprs
     if (is.null(eawp$weights))
         weights <- matrix(1, nrow=nrow(y), ncol=ncol(y))
@@ -87,7 +87,7 @@ context_vcov <- function(context, row) {
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01) {
+limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.001) {
     design <- clean_design_matrix(design)
     effect <- effect(colnames(design))
 
@@ -118,11 +118,12 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.01
     else
         confects$table$name <- as.character(confects$table$index)
 
-    confects$limma_fit <- context$fit
-
     if (!is.null(context$fit$genes)) {
         confects$table <- cbind(confects$table, context$fit$genes[confects$table$index,,drop=FALSE])
     }
+
+    confects$limits <- effect$limits
+    confects$limma_fit <- context$fit
 
     confects
 }

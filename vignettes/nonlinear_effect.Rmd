@@ -1,0 +1,294 @@
+---
+title: "Nonlinear interaction effects"
+author: "Paul Harrison"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+    %\VignetteIndexEntry{Confident fold change}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+<style>
+.contents h2 { margin-top: 2em }
+</style>
+
+To illustrate non-linear interaction effects, we will be working with the GEO dataset [GSE80512](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80512). Briefly, this examines the effect of stressing yeast with heat or high salt concentration, with wildtype yeast and a yeast with a mutated histone in which post-translational phosphorylation at a certain site is prevented (thought to affect gene regulation). This data set was chosen simply because it is a good quality, publicly available data set which can be used to illustrate the interaction of two experimental factors.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=7, fig.height=6)
+```
+
+```{r load, message=FALSE, warning=FALSE}
+library(topconfects)
+
+library(reshape2)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+
+library(limma)
+library(edgeR)
+
+counts <- 
+    read.delim("GSE80512_DESeq2_raw_counts.txt.gz", row.names=1) %>% 
+    as.matrix
+
+# Retrieve symbol and description for each gene
+info <- AnnotationDbi::select(
+    org.Sc.sgd.db::org.Sc.sgd.db, 
+    rownames(counts), c("GENENAME")) 
+all(rownames(counts) == info$ORF)
+info <- select(info, GENENAME) %>% as.data.frame
+rownames(info) <- rownames(counts)
+
+# Experiment design
+samples <- read_csv(
+   "strain,stress,sample
+    wt,none,Sample_1_13462_CGATGT
+    wt,none,Sample_2_13463_TTAGGC
+    wt,none,Sample_3_13464_GATCAG
+    mutant,none,Sample_4_13465_CCGTCC
+    mutant,none,Sample_5_13466_GTCCGC
+    mutant,none,Sample_6_13467_ATTCCT
+    wt,salt,Sample_7_13468_ATCACG
+    wt,salt,Sample_8_13469_GCCAAT
+    wt,salt,Sample_9_13470_ACTTGA
+    mutant,salt,Sample_10_13471_TAGCTT
+    mutant,salt,Sample_11_13472_GGCTAC
+    mutant,salt,Sample_12_13473_ATGTCA
+    wt,heat,Sample_13_13474_TGACCA
+    wt,heat,Sample_14_13475_ACAGTG
+    wt,heat,Sample_15_13476_CAGATC
+    mutant,heat,Sample_16_13477_GTGGCC
+    mutant,heat,Sample_17_13478_CGTACG
+    mutant,heat,Sample_18_13479_GAGTGG") %>%
+    mutate(
+        strain=factor(strain,unique(strain)),
+        stress=factor(stress,unique(stress)))
+all(samples$sample == colnames(counts))
+```
+
+## limma fit
+
+```{r}
+design <- model.matrix(~ 0 + strain:stress, data=samples)
+colnames(design)
+
+y <- DGEList(counts, genes=info)
+keep <- rowSums(cpm(y)>2) >= 3
+table(keep)
+y <- y[keep, , keep.lib.sizes=FALSE]
+y <- calcNormFactors(y) %>%
+    estimateDisp(design)
+
+voomed <- voom(y, design)
+fit <- lmFit(voomed, design)
+
+eBayes(fit)$df.prior
+```
+
+## Viewing stamp collections
+
+With two possible main effects and an interaction effect, it will be important to view the raw data to understand what is actually going on.
+
+```{r stamp}
+group_rpms <- 
+    (2^fit$coefficients) %>%
+    melt(c("gene","coef"), value.name="RPM") %>% 
+    separate(coef, c("strain","stress")) %>%
+    mutate(strain = factor(gsub("strain","",strain), levels=c("wt","mutant")),
+           stress = factor(gsub("stress","",stress), levels=c("none","salt","heat")))
+
+sample_rpms <- 
+    cpm(y) %>%
+    melt(c("gene","sample"), value.name="RPM") %>%
+    left_join(samples,"sample")
+
+show_stamps <- function(names, stressors, n=25) {
+    names <- head(names, n)
+    
+    group_rpms %>% 
+    filter(gene %in% names, stress %in% stressors) %>% 
+    mutate(gene=factor(gene,names)) %>%
+    ggplot(aes(x=stress,color=strain,group=strain,y=RPM)) + 
+    geom_line() +
+    geom_point(
+        data=filter(sample_rpms, gene %in% names, stress %in% stressors), 
+        alpha=0.333, size=3, stroke=0) +
+    geom_hline(yintercept=0) + 
+    facet_wrap(~ gene, scales="free_y")
+}
+```
+
+First, let us look at a random sample of genes. Let's just concentrate on the response to salt.
+
+```{r}
+show_stamps(sample(rownames(y)), c("none", "salt"))
+```
+
+Many of the genes show differential expression due to the salt stress. However our primary interest is how this interacts with the histone mutation.
+
+## limma topTable
+
+Let's try to identify genes where the response to salt stress is different in the mutant.
+
+This contrast on the log-linear model will search for genes where `(mutant_salt/mutant_none)/(wt_salt/wt_none) != 1`
+
+```{r edger_test}
+top <- fit %>%
+    contrasts.fit(contrast=c(1,-1,-1,1,0,0)) %>%
+    eBayes() %>%
+    topTable(coef=1, n=Inf)
+
+table(top$adj.P.Val <= 0.05)
+
+print(head(top, 10), right=FALSE)
+```
+
+We have many significant discoveries, but looking at the top 25 yields disappointment:
+
+```{r edger_show}
+show_stamps(rownames(top), c("none", "salt"))
+```
+
+The top results by p-value are rather hit-and-miss in terms of a substantial interaction effect.
+
+Note: Taking a leaf out of [Di Cook's](http://dicook.github.io/) playbook, with 520 significant results it would not take long to manually examine all of them. This would only require examining 21 figures such as the one shown above.
+
+
+## Log-linear confects
+
+We now instead will search for genes where `log2( (mutant_salt/mutant_none)/(wt_salt/wt_none) )` has maximum magnitude.
+
+```{r linear}
+confects_log <- fit %>%
+    contrasts.fit(contrast=c(1,-1,-1,1,0,0)) %>%
+    limma_confects(coef=1)
+
+confects_log
+```
+
+Here are the top 25 genes.
+
+```{r linear_stamps}
+show_stamps(confects_log$table$name, c("none", "salt"))
+```
+
+This is no great improvement. Can you see the problem? A difference in ratios between when the gene is essentially off and when it is on is not interesting. The fact of the gene turning on is the story -- but not the story we are interested in!
+
+
+## Additive interaction relative to total
+
+Processing RNA-Seq data is usually done on log transformed counts. This leads naturally to the use of multiplicative interaction effects. However perhaps we should consider additive interaction effects.
+
+Initial processing with voom and limma retains the log transformation (we know this works well, and do not want to mess with it). We then convert expression levels back to absolute terms to calculate an additive interaction.
+
+Different genes have very different expression levels, so the largest interactions will often simply be in highly expressed genes, but this is not what we are interested in. Therefore we further divide by total expression level. This limits the interaction effect size to the range `[-1,1]`.
+
+This effect size can be defined using the `effect_expr` function.
+
+```{r}
+effect_add <- effect_expr(
+    ~ ( 2^`strainwt:stressnone`    -2^`strainwt:stresssalt`
+       -2^`strainmutant:stressnone`+2^`strainmutant:stresssalt`)
+    / ( 2^`strainwt:stressnone`    +2^`strainwt:stresssalt`
+       +2^`strainmutant:stressnone`+2^`strainmutant:stresssalt`)
+)
+
+confects_add <- limma_nonlinear_confects(voomed, design, effect_add)
+
+confects_add
+```
+
+Here are the top 25 genes.
+
+```{r}
+show_stamps(confects_add$table$name, c("none", "salt"))
+```
+
+These genes look much more interesting.
+
+
+## Difference of proportions
+
+Perhaps we still believe in multiplicative rather than additive effects. An option here would be to look at a difference of proportions. This will be significant in exactly the same genes as the multiplicative interaction (plus or minus some differences due to approximations used by the testing method), but the effect size and hence gene ranking will be different.
+
+A drawback of this approach is that it is not symmetric in the two factors of the experiment.
+
+```{r nonlinear}
+# This creates an object specifying the non-linear effect we are interested in.
+# topconfects has several such effect_... functions, and more can easily be added.
+# The _log2 is because edgeR has a log link function,
+#    and coefficients need to be transformed back to a linear scale.
+#my_effect <- effect_shift_log2(c(1,3),c(2,4))
+
+effect_dp <- effect_expr(
+    ~ 2^`strainmutant:stresssalt` / (2^`strainmutant:stressnone`+2^`strainmutant:stresssalt`) -
+      2^`strainwt:stresssalt`     / (2^`strainwt:stressnone`    +2^`strainwt:stresssalt`    )
+)
+
+confects_dp <- limma_nonlinear_confects(voomed, design, effect_dp)
+
+confects_dp
+```
+
+```{r nonlinear_stamps}
+show_stamps(confects_dp$table$name, c("none", "salt"))
+```
+
+
+### Lack of symmetry
+
+The difference of proportions effect size is not symmetric in the two experimental factors. We might instead seek interesting genes using:
+
+```{r nonlinear2}
+#effect_dp2 <- effect_shift_log2(c(1,2),c(3,4))
+
+effect_dp2 <- effect_expr(
+    ~ 2^`strainmutant:stresssalt` / (2^`strainwt:stresssalt`+2^`strainmutant:stresssalt`) -
+      2^`strainmutant:stressnone` / (2^`strainwt:stressnone`+2^`strainmutant:stressnone`))
+
+confects_dp2 <- limma_nonlinear_confects(voomed, design, effect_dp2)
+
+show_stamps(confects_dp2$table$name, c("none", "salt"))
+```
+
+The top ranked genes are different. Here they are not as interesting.
+
+### "Shift" effect functions
+
+`effect_shift_unlog2` can also be used to calculate this "difference of proportions" effect size. This generalizes to 2-by-n tests looking for shifting through an ordered set of n levels between 2 conditions.
+
+```{r}
+# Coefficients by name
+alt1_effect_dp <- effect_shift_unlog2(
+    c("strainwt:stressnone", "strainwt:stresssalt"),
+    c("strainmutant:stressnone", "strainmutant:stresssalt"))
+
+alt1_confects_dp <- limma_nonlinear_confects(voomed, design, alt1_effect_dp)
+all.equal(confects_dp$table$confect, alt1_confects_dp$table$confect)
+
+# Coefficients by number
+alt2_effect_dp <- effect_shift_unlog2(c(1,3), c(2,4))
+
+alt2_confects_dp <- limma_nonlinear_confects(voomed, design, alt2_effect_dp)
+all.equal(confects_dp$table$confect, alt2_confects_dp$table$confect)
+```
+
+## Discussion
+
+Our general recommendation is to use the additive effect size relative to total expression, as described above. The difference of proportions approach may make more sense when one of the factors is from two different measurements within the same condition, for example the proportion of ribosome associated RNA within total RNA or the proportion of freshly transcribed RNA within total RNA.
+
+Finally, whatever method is used, visualizing interaction plots for individual genes is an essential part of the process.
+
+---
+
+```{r}
+sessionInfo()
+```
+
+
+
+

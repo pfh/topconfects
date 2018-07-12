@@ -4,7 +4,7 @@
 \alias{nest_confects}
 \title{General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR}
 \usage{
-nest_confects(n, pfunc, fdr = 0.05, step = 0.01)
+nest_confects(n, pfunc, fdr = 0.05, step = 0.001)
 }
 \arguments{
 \item{n}{Number of items being tested.}
@@ -28,9 +28,9 @@ The most important part of this object is the $table element, a data frame with 
 
 The usage is as follows: To find a set of tests which have effect size at least \code{x} with the specified FDR, take the rows with \code{abs(confect) >= x}.
 
-Some tests may have been given the same \code{confect}. To maintain the FDR, all or none should be chosen.
+One may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible.
 
-With this caveat understood, one may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible.
+Some rows in the output may be given the same \code{confect}, even if \code{step} is made small. This is an expected behaviour of the algorithm. (This is similar to FDR adjustment of p-values sometimes resulting in a run of the same adjusted p-value, even if all the input p-values are distinct.) 
 
 Some wrappers around this function may add a sign to the \code{confect} column, if it makes sense to do so. They will also generally add an \code{effect} column, containing an estimate of the effect size that aims to be unbiassed rather than a conservative lower bound.
 }

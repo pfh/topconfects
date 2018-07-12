@@ -4,7 +4,7 @@
 \alias{normal_confects}
 \title{Confident effect sizes from from normal or t distributions}
 \usage{
-normal_confects(effect, sd, df = Inf, fdr = 0.05, step = 0.01)
+normal_confects(effect, sd, df = Inf, fdr = 0.05, step = 0.001)
 }
 \arguments{
 \item{effect}{A vector of estimated effects.}
