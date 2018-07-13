@@ -38,6 +38,8 @@ make_context <- function(object, design) {
     fit <- limma::lmFit(y, design, weights=weights) 
     fit <- limma::eBayes(fit)
 
+    fit$genes <- eawp$probes
+
     list(
         y=y, 
         weights=weights, 
