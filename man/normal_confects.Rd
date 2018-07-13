@@ -4,18 +4,21 @@
 \alias{normal_confects}
 \title{Confident effect sizes from from normal or t distributions}
 \usage{
-normal_confects(effect, sd, df = Inf, fdr = 0.05, step = 0.001)
+normal_confects(effect, se, df = Inf, fdr = 0.05, step = 0.001,
+  full = FALSE)
 }
 \arguments{
 \item{effect}{A vector of estimated effects.}
 
-\item{sd}{A single or vector of standard deviations (or if t distribution, scales).}
+\item{se}{A single or vector of standard deviations (or if t distribution, scales).}
 
 \item{df}{A single or vector of degrees of freedom, for t-distribution. Inf for normal distribution.}
 
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of effect sizes to test.}
+
+\item{full}{Include some further statistics used to calculate confects in the output.}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.

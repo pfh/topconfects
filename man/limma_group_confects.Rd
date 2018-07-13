@@ -5,7 +5,7 @@
 \title{Group effect sizes starting from limma analysis}
 \usage{
 limma_group_confects(object, design, grouping, effect, intercor = 0,
-  fdr = 0.05, step = 0.001)
+  df_conservative = FALSE, fdr = 0.05, step = 0.001, full = FALSE)
 }
 \arguments{
 \item{object}{An expression matrix or EList object, or anything limma's lmFit will accept.}
@@ -18,9 +18,13 @@ limma_group_confects(object, design, grouping, effect, intercor = 0,
 
 \item{intercor}{Correlation of the contributions of different features to the effect size. 0 implies no correlation, 1 implies perfect correlation. Larger values will produce more conservative confects. Effect size estimates are unaffected.}
 
+\item{df_conservative}{Use a conservative value of the df as no more than that of for single feature tests (ie df.total produced by limma). By default, a Welch-Satterthwaite approximation is used, with each member in a group contributing its down df (including prior df). This default is appropriate for gene-set enrichment, but might not be appropriate for gene effect sizes where the features are (eg) exons, and biological variation might affect the whole gene.}
+
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of effect sizes to test.}
+
+\item{full}{Include some further statistics used to calculate confects in the output.}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
