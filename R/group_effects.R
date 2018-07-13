@@ -4,7 +4,7 @@
 # Once supplied with parameters and column names, these take a matrix [feature,coef] of coefficients and produce a list(effect=, gradient=). effect is a single number. gradient is a matrix [feature,coef].
 #
 
-
+#' @export
 group_effect_unlog2 <- 
 function(group_effect) 
 function(col_names) {
@@ -23,6 +23,7 @@ function(col_names) {
     )
 }
 
+#' @export
 group_effect_shift <-
 function(coef1, coef2)
 function(col_names) {
@@ -65,6 +66,7 @@ function(col_names) {
     )
 }
 
+#' @export
 group_effect_shift_unlog2 <- function(coef1, coef2)
     group_effect_unlog2(group_effect_shift(coef1, coef2))
 
