@@ -85,7 +85,7 @@ function(col_names) {
     assert_that(is.numeric(contrast))
 
     if (!is.null(names(contrast))) {
-        new_contrast <- rep(0.0, ncol(design))
+        new_contrast <- rep(0.0, length(col_names))
         new_contrast[ resolve_coef(names(contrast), col_names) ] <- contrast
         contrast <- new_contrast
     }

@@ -77,24 +77,20 @@ limma_group_confects <- function(object, design, grouping, effect,
         sum_u <- sum(u)
         sum_u2 <- sum(u2)
 
-        # If no inter-feature correlation
-        # se[i] <- sqrt(sum_u2)
-
         # Contribution of each feature to the effect size may be correlated
         # Assume a correlation matrix with 1 on the diagonal and intercor everywhere else
-        se[i] <- sqrt( sum_u2 + intercor*(sum_u^2-sum_u2) )
+        se[i] <- sqrt(sum_u2 + intercor*(sum_u^2-sum_u2))
 
-        # Generalized Welch-Satterthwaite after R Willink, 2007
-        if (all(this_dfs == Inf))
-            df[i] <- Inf
-        else if (df_conservative)
+        if (df_conservative) {
+            # Should all be equal, min just makes them singular.
             df[i] <- min(this_dfs)
-        else
-            df[i] <- max(
-                1,
-                se[i]^4 / 
-                  sum( (u2+intercor*u*(sum_u-u))^2 / this_dfs )
-            )
+        } else if (all(this_dfs == Inf)) {
+            df[i] <- Inf
+        } else {
+            # Generalized Welch-Satterthwaite after R Willink (2007)
+            # https://doi.org/10.1088/0026-1394/44/5/010
+            df[i] <- se[i]^4 / sum((u2+intercor*u*(sum_u-u))^2 / this_dfs)
+        }
 
         # Average of the total expression in each sample.
         # Assumes a log2 scale!

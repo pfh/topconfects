@@ -9,6 +9,8 @@
 #'
 #' @param df A single or vector of degrees of freedom, for t-distribution. Inf for normal distribution.
 #'
+#' @param signed If TRUE effects are signed, use TREAT test. If FALSE effects are all positive, use one sided t-test.
+#'
 #' @param fdr False Discovery Rate to control for.
 #'
 #' @param step Granularity of effect sizes to test.
@@ -20,24 +22,33 @@
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #'@export
-normal_confects <- function(effect, se, df=Inf, fdr=0.05, step=0.001, full=FALSE) {
+normal_confects <- function(effect, se, df=Inf, signed=TRUE, fdr=0.05, step=0.001, full=FALSE) {
     n <- max(length(mean), length(se), length(df))
     effect <- broadcast(effect, n)
     se <- broadcast(se, n)
     df <- broadcast(df, n)
 
-    abs_effect <- abs(effect)
+    if (signed) {
+        abs_effect <- abs(effect)
 
-    pfunc <- function(indices, mag) {
-        abs_effect_i <- abs_effect[indices]
-        se_i <- se[indices]
-        df_i <- df[indices]
+        pfunc <- function(indices, mag) {
+            abs_effect_i <- abs_effect[indices]
+            se_i <- se[indices]
+            df_i <- df[indices]
 
-        tstat_right <- (abs_effect_i-mag)/se_i
-        tstat_left <- (abs_effect_i+mag)/se_i
+            tstat_right <- (abs_effect_i-mag)/se_i
+            tstat_left <- (abs_effect_i+mag)/se_i
 
-        pt(tstat_right, df=df_i, lower.tail=FALSE) + 
-            pt(tstat_left,df=df_i, lower.tail=FALSE)
+            pt(tstat_right, df=df_i, lower.tail=FALSE) + 
+                pt(tstat_left,df=df_i, lower.tail=FALSE)
+        }
+    } else {
+        assert_that(all(effect >= 0.0))
+
+        pfunc <- function(indices, mag) {
+            tstat <- (effect[indices]-mag)/se[indices]
+            pt(tstat, df=df[indices], lower.tail=FALSE)
+        }
     }
 
     confects <- nest_confects(n, pfunc, fdr=fdr, step=step)
@@ -50,5 +61,12 @@ normal_confects <- function(effect, se, df=Inf, fdr=0.05, step=0.001, full=FALSE
         confects$table$df <- df[confects$table$index]
     }
 
+    if (signed)
+        confects$limits <- c(0,NA)
+
     confects
 }
+
+
+
+
