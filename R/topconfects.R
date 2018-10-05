@@ -93,6 +93,9 @@ confects_plot <- function(confects, n=50, limits=NULL) {
         }
     }
 
+    if (is.na(limits[1])) limits[1] <- min(tab$effect)*1.05
+    if (is.na(limits[2])) limits[2] <- max(tab$effect)*1.05
+
     assert_that(is.numeric(limits), length(limits) == 2)
 
     tab$confect_from <- limits[1]

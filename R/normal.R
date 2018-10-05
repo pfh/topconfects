@@ -61,7 +61,7 @@ normal_confects <- function(effect, se, df=Inf, signed=TRUE, fdr=0.05, step=0.00
         confects$table$df <- df[confects$table$index]
     }
 
-    if (signed)
+    if (!signed)
         confects$limits <- c(0,NA)
 
     confects

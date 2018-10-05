@@ -4,7 +4,8 @@
 \alias{limma_nonlinear_confects}
 \title{Confident non-linear effect sizes using Wald tests and limma}
 \usage{
-limma_nonlinear_confects(object, design, effect, fdr = 0.05, step = 0.001)
+limma_nonlinear_confects(object, design, effect, fdr = 0.05,
+  step = 0.001)
 }
 \arguments{
 \item{object}{An expression matrix or EList object, or anything limma's lmFit will accept.}
