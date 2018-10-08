@@ -70,7 +70,13 @@ confects_description <- function(confects) {
 #' @export
 confects_plot <- function(confects, n=50, limits=NULL) {
     tab <- head(confects$table, n)
-    mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+    
+    mag_col <- confects$magnitude_column
+    if (is.null(mag_col))
+        mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+    mag_desc <- confects$magnitude_desc
+    if (is.null(mag_desc))
+        mag_desc <- mag_col
 
     if (identical(mag_col,"baseMean"))
         mag_scale <- "log10"
@@ -112,7 +118,7 @@ confects_plot <- function(confects, n=50, limits=NULL) {
         geom_segment(aes_string(yend="name", x="confect_from", xend="confect_to")) +
         geom_point(aes_string(size=mag_col)) +
         scale_x_continuous(expand=c(0,0), limits=limits, oob=function(a,b) a) +
-        labs(x = confects$effect_desc) +
+        labs(x=confects$effect_desc, size=mag_desc) +
         theme_bw()
 
     if (identical(mag_col,"baseMean"))
@@ -134,7 +140,13 @@ confects_plot <- function(confects, n=50, limits=NULL) {
 #' @export
 confects_plot_me <- function(confects) {
     tab <- confects$table
-    mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+
+    mag_col <- confects$magnitude_column
+    if (is.null(mag_col))
+        mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+    mag_desc <- confects$magnitude_desc
+    if (is.null(mag_desc))
+        mag_desc <- mag_col
 
     assert_that(!is.null(mag_col), msg="No mean expression column available.")
 
@@ -142,7 +154,7 @@ confects_plot_me <- function(confects) {
         geom_point(aes_string(y="effect"), color="#cccccc") +
         geom_hline(yintercept=0) +
         geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
-        labs(y = confects$effect_desc) +
+        labs(y=confects$effect_desc, x=mag_desc) +
         theme_bw()
 
     if (identical(mag_col,"baseMean"))
