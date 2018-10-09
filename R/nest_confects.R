@@ -66,7 +66,7 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.001, full=FALSE) {
     table <- data.frame(rank=seq_len(n), index=indices, confect=mags)
     if (full) {
         table$fdr_zero <- 
-            p.adjust(pfunc(seq_len(n), 0.0), method="BH")[ table$indices ]
+            p.adjust(pfunc(seq_len(n), 0.0), method="BH")[ table$index ]
     }
 
     new("Topconfects", list(
