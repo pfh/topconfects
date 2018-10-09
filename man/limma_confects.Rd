@@ -5,7 +5,7 @@
 \title{Confident log2 fold changes based on a limma fit object}
 \usage{
 limma_confects(fit, coef = NULL, fdr = 0.05, step = 0.001,
-  trend = FALSE)
+  trend = FALSE, full = FALSE)
 }
 \arguments{
 \item{fit}{A limma MArrayLM object.}
@@ -17,6 +17,8 @@ limma_confects(fit, coef = NULL, fdr = 0.05, step = 0.001,
 \item{step}{Granularity of log2 fold changes to test.}
 
 \item{trend}{Should \code{treat(..., trend=TRUE)} be used?}
+
+\item{full}{Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.

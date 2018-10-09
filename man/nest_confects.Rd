@@ -4,7 +4,7 @@
 \alias{nest_confects}
 \title{General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR}
 \usage{
-nest_confects(n, pfunc, fdr = 0.05, step = 0.001)
+nest_confects(n, pfunc, fdr = 0.05, step = 0.001, full = FALSE)
 }
 \arguments{
 \item{n}{Number of items being tested.}
@@ -14,6 +14,8 @@ nest_confects(n, pfunc, fdr = 0.05, step = 0.001)
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of effect sizes to test.}
+
+\item{full}{If TRUE, also include FDR-adjusted p-value that effect size is non-zero. Note that this is against the spirit of the topconfects approach.}
 }
 \value{
 A "Topconfects" object, containing a table of results and various associated information.

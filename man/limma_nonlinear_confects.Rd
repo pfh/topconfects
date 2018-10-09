@@ -5,7 +5,7 @@
 \title{Confident non-linear effect sizes using Wald tests and limma}
 \usage{
 limma_nonlinear_confects(object, design, effect, fdr = 0.05,
-  step = 0.001)
+  step = 0.001, full = FALSE)
 }
 \arguments{
 \item{object}{An expression matrix or EList object, or anything limma's lmFit will accept.}
@@ -17,6 +17,8 @@ limma_nonlinear_confects(object, design, effect, fdr = 0.05,
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of effect sizes to test.}
+
+\item{full}{Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.

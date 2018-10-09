@@ -84,12 +84,14 @@ context_vcov <- function(context, row) {
 #'
 #' @param step Granularity of effect sizes to test.
 #'
+#' @param full Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).
+#'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.001) {
+limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.001, full=FALSE) {
     design <- clean_design_matrix(design)
     effect <- effect(colnames(design))
 
@@ -112,7 +114,7 @@ limma_nonlinear_confects <- function(object, design, effect, fdr=0.05, step=0.00
         se[i] <- sqrt( sum(colSums(vcovs*result$gradient)*result$gradient) )
     }
 
-    confects <- normal_confects(x, se, df=context$fit$df.total, fdr=fdr, step=step)
+    confects <- normal_confects(x, se, df=context$fit$df.total, fdr=fdr, step=step, full=full)
 
     confects$table$AveExpr <- context$fit$Amean[confects$table$index]
     if (!is.null(rownames(context$fit)))

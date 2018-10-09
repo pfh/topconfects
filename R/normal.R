@@ -15,8 +15,8 @@
 #'
 #' @param step Granularity of effect sizes to test.
 #'
-#' @param full Include some further statistics used to calculate confects in the output.
-#' 
+#' @param full Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).
+#'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
@@ -51,14 +51,17 @@ normal_confects <- function(effect, se, df=Inf, signed=TRUE, fdr=0.05, step=0.00
         }
     }
 
-    confects <- nest_confects(n, pfunc, fdr=fdr, step=step)
+    confects <- nest_confects(n, pfunc, fdr=fdr, step=step, full=full)
     ranked_effect <- effect[confects$table$index]
     confects$table$confect <- sign(ranked_effect) * confects$table$confect
     confects$table$effect <- ranked_effect
 
     if (full) {
+        fdr_zero <- confects$table$fdr_zero
+        confects$table$fdr_zero <- NULL
         confects$table$se <- se[confects$table$index]
         confects$table$df <- df[confects$table$index]
+        confects$table$fdr_zero <- fdr_zero
     }
 
     if (!signed)

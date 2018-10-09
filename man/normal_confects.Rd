@@ -20,7 +20,7 @@ normal_confects(effect, se, df = Inf, signed = TRUE, fdr = 0.05,
 
 \item{step}{Granularity of effect sizes to test.}
 
-\item{full}{Include some further statistics used to calculate confects in the output.}
+\item{full}{Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.

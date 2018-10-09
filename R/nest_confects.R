@@ -12,6 +12,8 @@
 #'
 #' @param step Granularity of effect sizes to test.
 #'
+#' @param full If TRUE, also include FDR-adjusted p-value that effect size is non-zero. Note that this is against the spirit of the topconfects approach.
+#'
 #' @return A "Topconfects" object, containing a table of results and various associated information.
 #'
 #' The most important part of this object is the $table element, a data frame with the following columns:
@@ -39,7 +41,7 @@
 #' nest_confects(length(z), pfunc, fdr=0.05)
 #'
 #' @export
-nest_confects <- function(n, pfunc, fdr=0.05, step=0.001) {
+nest_confects <- function(n, pfunc, fdr=0.05, step=0.001, full=FALSE) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 
@@ -61,8 +63,14 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.001) {
         steps <- steps + 1
     }
 
+    table <- data.frame(rank=seq_len(n), index=indices, confect=mags)
+    if (full) {
+        table$fdr_zero <- 
+            p.adjust(pfunc(seq_len(n), 0.0), method="BH")[ table$indices ]
+    }
+
     new("Topconfects", list(
-        table=data.frame(rank=seq_len(n), index=indices, confect=mags),
+        table=table,
         effect_desc = "effect size",
         fdr=fdr, step=step, pfunc=pfunc))
 }

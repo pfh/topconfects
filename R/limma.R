@@ -18,12 +18,14 @@
 #' 
 #' @param trend Should \code{treat(..., trend=TRUE)} be used?
 #'
+#' @param full Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).
+#'
 #' @return
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @export
-limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE) {
+limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE, full=FALSE) {
     assert_that(is(fit, "MArrayLM"), msg="fit must be an MArrayLM object")
     
     if (is.null(coef) && ncol(fit$coefficients) == 1)
@@ -60,7 +62,7 @@ limma_confects <- function(fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE) {
     effect <- fit$coefficients[,coef]
     sd <- fit$stdev.unscaled[,coef] * sqrt(fit$s2.post)
     df <- fit$df.total
-    confects <- normal_confects(effect, sd, df, fdr=fdr, step=step)
+    confects <- normal_confects(effect, sd, df, fdr=fdr, step=step, full=full)
 
     confects$table$AveExpr <- fit$Amean[confects$table$index]
     if (!is.null(rownames(fit)))
