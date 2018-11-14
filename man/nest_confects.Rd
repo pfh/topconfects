@@ -28,9 +28,9 @@ The most important part of this object is the $table element, a data frame with 
     \item \code{confect} - CONfident efFECT size.
 }
 
-The usage is as follows: To find a set of tests which have effect size at least \code{x} with the specified FDR, take the rows with \code{abs(confect) >= x}. Once the set is selected, the confect values provide confidence bounds on the effect size with False Coverage-statement Rate at the same level as the FDR.
+The usage is as follows: To find a set of tests which have effect size greater than x with the specified FDR, take the rows with \code{abs(confect) >= x}. Once the set is selected, the confect values provide confidence bounds on the effect size with False Coverage-statement Rate (FCR) at the same level as the FDR.
 
-One may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible. However if some genes have the same \code{abs(confect)}, all or none should be used.
+One may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible. However if some genes have the same \code{abs(confect)}, all or none should be selected.
 
 Some rows in the output may be given the same \code{confect}, even if \code{step} is made small. This is an expected behaviour of the algorithm. (This is similar to FDR adjustment of p-values sometimes resulting in a run of the same adjusted p-value, even if all the input p-values are distinct.) 
 
