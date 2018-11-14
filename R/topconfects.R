@@ -24,9 +24,9 @@ first_match <- function(avail, options, default=NULL) {
 #
 confects_description <- function(confects) {
     result <- paste0(
-       sum(!is.na(confects$table$confect)),
-       " of ", nrow(confects$table), " non-zero ", confects$effect_desc, 
-       " at FDR ", confects$fdr, "\n")
+        sum(!is.na(confects$table$confect)),
+        " of ", nrow(confects$table), " non-zero ", confects$effect_desc, 
+        " at FDR ", confects$fdr, "\n")
 
     if (!is.null(confects$edger_fit) && length(confects$edger_fit$df.prior) == 1)
         result <- paste0(result,

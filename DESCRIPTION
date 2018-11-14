@@ -1,8 +1,8 @@
 Package: topconfects
 Title: Top Confident Effect Sizes
-Version: 1.1.2
-Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"))
-Description: Find the largest confident effect sizes from a large collection, while maintaining False Discovery Rate control. The main application is differential gene expression analysis, providing genes ranked in order of confident log2 fold change.
+Version: 1.1.3
+Authors@R: person("Paul", "Harrison", email = "pfh@logarithmic.net", role = c("aut", "cre"), comment=c(ORCID="0000-0002-3980-268X"))
+Description: Find the largest confident effect sizes from a large collection, while maintaining False Discovery Rate and False Coverage-statement Rate control. The main application is differential gene expression analysis, providing genes ranked in order of confident log2 fold change.
 Depends:
     R (>= 3.3.0)
 Imports:
@@ -29,5 +29,6 @@ License: LGPL-2.1 | file LICENSE
 URL: https://github.com/pfh/topconfects
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 VignetteBuilder: knitr
+BugReports: https://github.com/pfh/topconfects/issues

@@ -4,22 +4,35 @@
 \alias{normal_confects}
 \title{Confident effect sizes from from normal or t distributions}
 \usage{
-normal_confects(effect, sd, df = Inf, fdr = 0.05, step = 0.01)
+normal_confects(effect, se, df = Inf, signed = TRUE, fdr = 0.05,
+  step = 0.001, full = FALSE)
 }
 \arguments{
 \item{effect}{A vector of estimated effects.}
 
-\item{sd}{A single or vector of standard deviations (or if t distribution, scales).}
+\item{se}{A single number or vector of standard errors (or if t distribution, scales).}
 
-\item{df}{A single or vector of degrees of freedom, for t-distribution. Inf for normal distribution.}
+\item{df}{A single number or vector of degrees of freedom, for t-distribution. Inf for normal distribution.}
+
+\item{signed}{If TRUE effects are signed, use TREAT test. If FALSE effects are all positive, use one sided t-test.}
 
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of effect sizes to test.}
+
+\item{full}{Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
 }
 \description{
 A general purpose confident effect size function for where a normal or t distribution of errors can be assumed. Calculates confident effect sizes based on an estimated effect and standard deviation (normal distribution), or mean and scale (t distribution).
+}
+\examples{
+
+# Find largest positive or negative z-scores in a collection, 
+# and place confidence bounds on them that maintain FDR 0.05.
+z <- c(1,-2,3,-4,5)
+normal_confects(z, se=1, fdr=0.05, full=TRUE)
+
 }

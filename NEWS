@@ -1,4 +1,7 @@
 
+1.1.3
+- Add "full" output option for limma_confects and normal_confects, which adds se, df, and fdr_zero columns.
+
 1.1.2
 - Add DESeq2 support.
 

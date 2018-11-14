@@ -17,7 +17,7 @@ The method is described in:
 
 ## Usage
 
-Use [limma_confects](reference/limma_confects.html), [edger_confects](reference/edger_confects.html), or [deseq2_confects](reference/deseq2_confects.html) as part of your limma, edgeR, or DESeq2 analysis.
+Use [limma_confects](reference/limma_confects.html), [edger_confects](reference/edger_confects.html), or [deseq2_confects](reference/deseq2_confects.html) as part of your limma, edgeR, or DESeq2 analysis (the limma method is currently much faster than other methods).
 
 * [Example RNA-seq analysis](articles/fold_change.html)
 

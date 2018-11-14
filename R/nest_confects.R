@@ -2,7 +2,7 @@
 
 #' General purpose function to find sets of discoveries for a range of effect sizes, controlling FDR
 #'
-#' Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate for each set.
+#' Find sets of discoveries for a range of effect sizes, controlling the False Discovery Rate (FDR) for each set.
 #'
 #' @param n Number of items being tested.
 #'
@@ -11,6 +11,8 @@
 #' @param fdr False Discovery Rate to control for.
 #'
 #' @param step Granularity of effect sizes to test.
+#'
+#' @param full If TRUE, also include FDR-adjusted p-value that effect size is non-zero. Note that this is against the spirit of the topconfects approach.
 #'
 #' @return A "Topconfects" object, containing a table of results and various associated information.
 #'
@@ -22,9 +24,9 @@
 #'     \item \code{confect} - CONfident efFECT size.
 #' }
 #'
-#' The usage is as follows: To find a set of tests which have effect size at least \code{x} with the specified FDR, take the rows with \code{abs(confect) >= x}.
+#' The usage is as follows: To find a set of tests which have effect size greater than x with the specified FDR, take the rows with \code{abs(confect) >= x}. Once the set is selected, the confect values provide confidence bounds on the effect size with False Coverage-statement Rate (FCR) at the same level as the FDR.
 #'
-#' One may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible.
+#' One may essentially take the top however many rows of the data frame and these will be the best set of results of that size to dependably have an effect size that is as large as possible. However if some genes have the same \code{abs(confect)}, all or none should be selected.
 #'
 #' Some rows in the output may be given the same \code{confect}, even if \code{step} is made small. This is an expected behaviour of the algorithm. (This is similar to FDR adjustment of p-values sometimes resulting in a run of the same adjusted p-value, even if all the input p-values are distinct.) 
 #'
@@ -39,7 +41,7 @@
 #' nest_confects(length(z), pfunc, fdr=0.05)
 #'
 #' @export
-nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
+nest_confects <- function(n, pfunc, fdr=0.05, step=0.001, full=FALSE) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 
@@ -61,8 +63,14 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.01) {
         steps <- steps + 1
     }
 
+    table <- data.frame(rank=seq_len(n), index=indices, confect=mags)
+    if (full) {
+        table$fdr_zero <- 
+            p.adjust(pfunc(seq_len(n), 0.0), method="BH")[ table$index ]
+    }
+
     new("Topconfects", list(
-        table=data.frame(rank=seq_len(n), index=indices, confect=mags),
+        table=table,
         effect_desc = "effect size",
         fdr=fdr, step=step, pfunc=pfunc))
 }
