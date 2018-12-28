@@ -1,35 +1,45 @@
 
-#' Confident effect sizes from from normal or t distributions
+#'Confident effect sizes from from normal or t distributions
 #'
-#' A general purpose confident effect size function for where a normal or t distribution of errors can be assumed. Calculates confident effect sizes based on an estimated effect and standard deviation (normal distribution), or mean and scale (t distribution).
+#'A general purpose confident effect size function for where a normal or t
+#'distribution of errors can be assumed. Calculates confident effect sizes based
+#'on an estimated effect and standard deviation (normal distribution), or mean
+#'and scale (t distribution).
 #'
-#' @param effect A vector of estimated effects.
+#'@param effect A vector of estimated effects.
 #'
-#' @param se A single number or vector of standard errors (or if t distribution, scales).
+#'@param se A single number or vector of standard errors (or if t distribution,
+#'  scales).
 #'
-#' @param df A single number or vector of degrees of freedom, for t-distribution. Inf for normal distribution.
+#'@param df A single number or vector of degrees of freedom, for t-distribution.
+#'  Inf for normal distribution.
 #'
-#' @param signed If TRUE effects are signed, use TREAT test. If FALSE effects are all positive, use one sided t-test.
+#'@param signed If TRUE effects are signed, use TREAT test. If FALSE effects are
+#'  all positive, use one sided t-test.
 #'
-#' @param fdr False Discovery Rate to control for.
+#'@param fdr False Discovery Rate to control for.
 #'
-#' @param step Granularity of effect sizes to test.
+#'@param step Granularity of effect sizes to test.
 #'
-#' @param full Include some further statistics used to calculate confects in the output, and also include FDR-adjusted p-values that effect size is non-zero (note that this is against the spirit of the topconfects approach).
+#'@param full Include some further statistics used to calculate confects in the
+#'  output, and also include FDR-adjusted p-values that effect size is non-zero
+#'  (note that this is against the spirit of the topconfects approach).
 #'
-#' @return
+#'@return
 #'
-#' See \code{\link{nest_confects}} for details of how to interpret the result.
+#'See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
 #' @examples
 #'
-#' # Find largest positive or negative z-scores in a collection, 
+#' # Find largest positive or negative z-scores in a collection,
 #' # and place confidence bounds on them that maintain FDR 0.05.
 #' z <- c(1,-2,3,-4,5)
 #' normal_confects(z, se=1, fdr=0.05, full=TRUE)
 #'
 #'@export
-normal_confects <- function(effect, se, df=Inf, signed=TRUE, fdr=0.05, step=0.001, full=FALSE) {
+normal_confects <- function(
+        effect, se, df=Inf, signed=TRUE,
+        fdr=0.05, step=0.001, full=FALSE) {
     n <- max(length(effect), length(se), length(df))
     effect <- broadcast(effect, n)
     se <- broadcast(se, n)
@@ -46,7 +56,7 @@ normal_confects <- function(effect, se, df=Inf, signed=TRUE, fdr=0.05, step=0.00
             tstat_right <- (abs_effect_i-mag)/se_i
             tstat_left <- (abs_effect_i+mag)/se_i
 
-            pt(tstat_right, df=df_i, lower.tail=FALSE) + 
+            pt(tstat_right, df=df_i, lower.tail=FALSE) +
                 pt(tstat_left,df=df_i, lower.tail=FALSE)
         }
     } else {

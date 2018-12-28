@@ -7,18 +7,37 @@
 confects_plot(confects, n = 50, limits = NULL)
 }
 \arguments{
-\item{confects}{A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.}
+\item{confects}{A "Topconfects" class object, as returned from
+limma_confects, edger_confects, etc.}
 
 \item{n}{Number if items to show.}
 
 \item{limits}{c(lower, upper) limits on x-axis.}
 }
 \value{
-A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
+A ggplot2 object. Working non-interactively, you must print() this for it to
+be displayed.
 }
 \description{
-Create a ggplot2 object showing the confect, effect, and average expression level of top features in a Topconfects object.
+Create a ggplot2 object showing the confect, effect, and average expression
+level of top features in a Topconfects object.
 }
 \details{
-For each gene, the estimated effect is shown as a dot. The confidence bound is shown as a line to positive or negative infinity, showing the set of non-rejected effect sizes for the feature.
+For each gene, the estimated effect is shown as a dot. The confidence bound
+is shown as a line to positive or negative infinity, showing the set of
+non-rejected effect sizes for the feature.
+}
+\examples{
+
+# Generate some random effect sizes with random accuracies
+n <- 100
+effect <- rnorm(n, sd=2)
+se <- rchisq(n, df=3)^-0.5
+
+# Find top confident effect sizes
+confects <- normal_confects(effect, se)
+
+# Plot top confident effect sizes
+confects_plot(confects, n=30)
+
 }

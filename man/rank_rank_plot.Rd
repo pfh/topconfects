@@ -19,8 +19,17 @@ rank_rank_plot(vec1, vec2, label1 = "First ranking",
 \item{n}{Show at most the first n names in vec1 and vec2.}
 }
 \value{
-A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
+A ggplot2 object. Working non-interactively, you must print() this for it to
+be displayed.
 }
 \description{
-This is useful, for example, when comparing different methods of ranking potentially interesting differentially expressed genes.
+This is useful, for example, when comparing different methods of ranking
+potentially interesting differentially expressed genes.
+}
+\examples{
+
+a <- sample(letters)
+b <- sample(letters)
+rank_rank_plot(a,b, n=20)
+
 }

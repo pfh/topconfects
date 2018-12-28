@@ -27,6 +27,6 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 inst/doc
-/tests/*.html
-/test_rmds/*.html
+/tests/testthat/*.cache
+/tests/testthat/*.out
 

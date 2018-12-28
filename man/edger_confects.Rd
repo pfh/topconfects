@@ -10,22 +10,57 @@ edger_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05,
 \arguments{
 \item{fit}{An edgeR DGEGLM object produced using \code{glmQLFit}.}
 
-\item{coef}{Coefficient to test, as per \code{glmTreat}. Use either coef or contrast or effect.}
+\item{coef}{Coefficient to test, as per \code{glmTreat}. Use either coef or
+contrast or effect.}
 
-\item{contrast}{Contrast to test, as per \code{glmTreat}. Use either coef or contrast or effect.}
+\item{contrast}{Contrast to test, as per \code{glmTreat}. Use either coef or
+contrast or effect.}
 
 \item{fdr}{False Discovery Rate to control for.}
 
 \item{step}{Granularity of log2 fold changes to test.}
 
-\item{null}{"null" parameter passed through to edger::glmTreat (if coef or contrast given). Choices are "worst.case" or "interval". Note that the default here is "worst.case", to be consistent with other functions in topconfects. This differs from the default for glmTreat.}
+\item{null}{"null" parameter passed through to edger::glmTreat (if coef or
+contrast given). Choices are "worst.case" or "interval". Note that the
+default here is "worst.case", to be consistent with other functions in
+topconfects. This differs from the default for glmTreat.}
 }
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
 }
 \description{
-For all possible absolute log2 fold changes (LFC), which genes have at least this fold change at a specified False Discovery Rate?
+For all possible absolute log2 fold changes (LFC), which genes have at least
+this fold change at a specified False Discovery Rate?
 }
 \details{
-Results are presented in a table such that for any given LFC, if the reader chooses the genes with abs(confect) less than this they are assured that this set of genes has at least this LFC (with the specified FDR). The confect column may also be viewed as a confidence bound on the LFC of each gene, with a dynamic correction for multiple testing.
+Results are presented in a table such that for any given LFC, if the reader
+chooses the genes with abs(confect) less than this they are assured that this
+set of genes has at least this LFC (with the specified FDR). The confect
+column may also be viewed as a confidence bound on the LFC of each gene, with
+a dynamic correction for multiple testing.
+}
+\examples{
+
+# Generate some random data
+n <- 100
+folds <- seq(-4,4,length.out=n)
+row_means <- runif(n, min=0, max=5)
+lib_scale <- c(1,2,3,4)
+means <- 2^(outer(folds, c(-0.5,-0.5,0.5,0.5))) *
+    row_means * rep(lib_scale,each=n)
+counts <- rnbinom(length(means), mu=means, size=1/0.1)
+dim(counts) <- dim(means)
+
+design <- cbind(c(1,1,0,0), c(0,0,1,1))
+
+# Fit data using edgeR quasi-likelihood
+library(edgeR)
+y <- DGEList(counts)
+y <- calcNormFactors(y)
+y <- estimateDisp(y, design)
+fit <- glmQLFit(y, design)
+
+# Find top confident effect sizes
+edger_confects(fit, contrast=c(-1,1))
+
 }

@@ -1,5 +1,4 @@
 
-
 #
 # Topconfects result class definition
 #
@@ -25,25 +24,30 @@ first_match <- function(avail, options, default=NULL) {
 confects_description <- function(confects) {
     result <- paste0(
         sum(!is.na(confects$table$confect)),
-        " of ", nrow(confects$table), " non-zero ", confects$effect_desc, 
+        " of ", nrow(confects$table), " non-zero ", confects$effect_desc,
         " at FDR ", confects$fdr, "\n")
 
-    if (!is.null(confects$edger_fit) && length(confects$edger_fit$df.prior) == 1)
+    if (!is.null(confects$edger_fit) &&
+            length(confects$edger_fit$df.prior) == 1) {
         result <- paste0(result,
             "Prior df ", sprintf("%.1f", confects$edger_fit$df.prior), "\n")
+    }
 
-    if (!is.null(confects$limma_fit) && length(confects$limma_fit$df.prior) == 1)
+    if (!is.null(confects$limma_fit) &&
+            length(confects$limma_fit$df.prior) == 1) {
         result <- paste0(result,
             "Prior df ", sprintf("%.1f", confects$limma_fit$df.prior), "\n")
+    }
 
-    if (!is.null(confects$edger_fit$dispersion))
+    if (!is.null(confects$edger_fit$dispersion)) {
         result <- paste0(result,
             sprintf("Dispersion %#.2g to %#.2g\n",
                 min(confects$edger_fit$dispersion),
                 max(confects$edger_fit$dispersion)),
             sprintf("Biological CV %.1f%% to %.1f%%\n",
                 100*sqrt(min(confects$edger_fit$dispersion)),
-                100*sqrt(max(confects$edger_fit$dispersion)))) 
+                100*sqrt(max(confects$edger_fit$dispersion))))
+    }
 
     result
 }
@@ -53,11 +57,15 @@ confects_description <- function(confects) {
 
 #' Top confident effect sizes plot
 #'
-#' Create a ggplot2 object showing the confect, effect, and average expression level of top features in a Topconfects object. 
+#' Create a ggplot2 object showing the confect, effect, and average expression
+#' level of top features in a Topconfects object.
 #'
-#' For each gene, the estimated effect is shown as a dot. The confidence bound is shown as a line to positive or negative infinity, showing the set of non-rejected effect sizes for the feature. 
+#' For each gene, the estimated effect is shown as a dot. The confidence bound
+#' is shown as a line to positive or negative infinity, showing the set of
+#' non-rejected effect sizes for the feature.
 #'
-#' @param confects A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.
+#' @param confects A "Topconfects" class object, as returned from
+#'   limma_confects, edger_confects, etc.
 #'
 #' @param n Number if items to show.
 #'
@@ -65,12 +73,27 @@ confects_description <- function(confects) {
 #'
 #' @return
 #'
-#' A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
+#' A ggplot2 object. Working non-interactively, you must print() this for it to
+#' be displayed.
+#'
+#' @examples
+#'
+#' # Generate some random effect sizes with random accuracies
+#' n <- 100
+#' effect <- rnorm(n, sd=2)
+#' se <- rchisq(n, df=3)^-0.5
+#'
+#' # Find top confident effect sizes
+#' confects <- normal_confects(effect, se)
+#'
+#' # Plot top confident effect sizes
+#' confects_plot(confects, n=30)
 #'
 #' @export
 confects_plot <- function(confects, n=50, limits=NULL) {
     tab <- head(confects$table, n)
     mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+    name_col <- first_match(c("name", "index"), names(tab))
 
     if (identical(mag_col,"baseMean"))
         mag_scale <- "log10"
@@ -102,14 +125,15 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     negative <- !is.na(tab$confect) & tab$effect < 0
     tab$confect_to[negative] <- tab$confect[negative]
 
-    tab$name <- factor(tab$name,rev(tab$name))
+    tab$name <- factor(tab[[name_col]],rev(tab[[name_col]]))
 
     p <- ggplot(tab, aes_string(y="name", x="effect")) +
         geom_vline(xintercept=0) +
-        geom_segment(aes_string(yend="name", x="confect_from", xend="confect_to")) +
+        geom_segment(aes_string(
+            yend="name", x="confect_from", xend="confect_to")) +
         geom_point(aes_string(size=mag_col)) +
         scale_x_continuous(expand=c(0,0), limits=limits, oob=function(a,b) a) +
-        labs(x = confects$effect_desc) +
+        labs(x = confects$effect_desc, y="") +
         theme_bw()
 
     if (identical(mag_col,"baseMean"))
@@ -120,13 +144,46 @@ confects_plot <- function(confects, n=50, limits=NULL) {
 
 #' Mean-expression vs effect size plot
 #'
-#' Like plotMD in limma, plots effect size against mean expression level. However shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in grey). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
+#' Like plotMD in limma, plots effect size against mean expression level.
+#' However shows "confect" on the y axis rather than "effect" ("effect" is shown
+#' underneath in grey). This may be useful for assessing whether effects are
+#' only being detected only in highly expressed genes.
 #'
-#' @param confects A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.
+#' @param confects A "Topconfects" class object, as returned from
+#'   \code{limma_confects}, \code{edger_confects}, or \code{deseq2_confects}.
 #'
 #' @return
 #'
-#' A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
+#' A ggplot2 object. Working non-interactively, you must print() this for it to
+#' be displayed.
+#'
+#' @examples
+#'
+#' library(NBPSeq)
+#' library(edgeR)
+#' library(limma)
+#'
+#' data(arab)
+#'
+#' # Extract experimental design from sample names
+#' treat <- factor(substring(colnames(arab),1,4), levels=c("mock","hrcc"))
+#' time <- factor(substring(colnames(arab),5,5))
+#'
+#' # Keep genes with at least 3 samples having an RPM of more than 2
+#' y <- DGEList(arab)
+#' keep <- rowSums(cpm(y)>2) >= 3
+#' y <- y[keep,,keep.lib.sizes=FALSE]
+#' y <- calcNormFactors(y)
+#'
+#' # Find top confident fold changes by topconfects-limma-voom method
+#' design <- model.matrix(~time+treat)
+#' voomed <- voom(y, design)
+#' fit <- lmFit(voomed, design)
+#' confects <- limma_confects(fit, "treathrcc")
+#'
+#' # Plot confident effect size against mean expression
+#' # (estimated effect size also shown as grey dots)
+#' confects_plot_me(confects)
 #'
 #' @export
 confects_plot_me <- function(confects) {
@@ -151,7 +208,8 @@ confects_plot_me <- function(confects) {
 
 #' A plot to compare two rankings
 #'
-#' This is useful, for example, when comparing different methods of ranking potentially interesting differentially expressed genes.
+#' This is useful, for example, when comparing different methods of ranking
+#' potentially interesting differentially expressed genes.
 #'
 #' @param vec1 A vector of names.
 #'
@@ -165,24 +223,38 @@ confects_plot_me <- function(confects) {
 #'
 #' @return
 #'
-#' A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
+#' A ggplot2 object. Working non-interactively, you must print() this for it to
+#' be displayed.
+#'
+#' @examples
+#'
+#' a <- sample(letters)
+#' b <- sample(letters)
+#' rank_rank_plot(a,b, n=20)
 #'
 #' @export
-rank_rank_plot <- function(vec1, vec2, label1="First ranking", label2="Second ranking", n=40) {
+rank_rank_plot <- function(
+        vec1, vec2, label1="First ranking", label2="Second ranking", n=40) {
     vec1 <- as.character( head(vec1, n) )
     vec2 <- as.character( head(vec2, n) )
 
-    df1 <- data.frame(rank1=seq_len(length(vec1)), name=vec1, stringsAsFactors=FALSE)
-    df2 <- data.frame(rank2=seq_len(length(vec2)), name=vec2, stringsAsFactors=FALSE)
+    df1 <- data.frame(
+        rank1=seq_len(length(vec1)), name=vec1, stringsAsFactors=FALSE)
+    df2 <- data.frame(
+        rank2=seq_len(length(vec2)), name=vec2, stringsAsFactors=FALSE)
     link <- merge(df1, df2, by="name")
     p <- ggplot(link) +
         geom_segment(aes_string(x="1", xend="2", y="rank1", yend="rank2")) +
         geom_point(aes_string(x="1", y="rank1")) +
         geom_point(aes_string(x="2", y="rank2")) +
-        geom_text(data=df1, aes_string(x="0.9",y="rank1",label="name"), hjust=1,vjust=0.5) +
-        geom_text(data=df2, aes_string(x="2.1",y="rank2",label="name"), hjust=0,vjust=0.5) +
-        scale_x_continuous(limits=c(0,3),breaks=c(1,2), minor_breaks=NULL, labels=c(label1,label2)) +
-        scale_y_continuous(breaks=seq_len(n), minor_breaks=NULL, trans="reverse") +
+        geom_text(data=df1, aes_string(x="0.9",y="rank1",label="name"),
+            hjust=1,vjust=0.5) +
+        geom_text(data=df2, aes_string(x="2.1",y="rank2",label="name"),
+            hjust=0,vjust=0.5) +
+        scale_x_continuous(limits=c(0,3), breaks=c(1,2),
+            minor_breaks=NULL, labels=c(label1,label2)) +
+        scale_y_continuous(breaks=seq_len(n), minor_breaks=NULL,
+            trans="reverse") +
         labs(x="",y="") +
         theme_bw()
 

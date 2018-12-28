@@ -7,12 +7,14 @@ quick : document
 check :
 	Rscript -e "devtools::check()"
 
-rmd_tests :
-	Rscript -e "rmarkdown::render('test_rmds/test_limma.Rmd')"
-	Rscript -e "rmarkdown::render('test_rmds/test_edgeR.Rmd')"
+bioccheck :
+	R CMD BiocCheck .
 
 document :
 	Rscript -e "devtools::document()"
+
+test :
+	Rscript -e "devtools::test()"
 
 install : document
 	Rscript -e "devtools::install()"

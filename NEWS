@@ -1,4 +1,7 @@
 
+1.1.4
+- Prepare for Bioconductor submission.
+
 1.1.3
 - Add "full" output option for limma_confects and normal_confects, which adds se, df, and fdr_zero columns.
 

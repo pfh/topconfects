@@ -9,7 +9,8 @@ deseq2_confects(object, ..., fdr = 0.05, step = 0.01)
 \arguments{
 \item{object}{Object produced by the \code{DESeq2::DESeq} function.}
 
-\item{...}{Further arguments to \code{DESeq2::results}. At a minimum you should specify either \code{contrast=} or \code{name=}.}
+\item{...}{Further arguments to \code{DESeq2::results}. At a minimum you
+should specify either \code{contrast=} or \code{name=}.}
 
 \item{fdr}{False Discovery Rate to control for.}
 
@@ -18,11 +19,48 @@ deseq2_confects(object, ..., fdr = 0.05, step = 0.01)
 \value{
 See \code{\link{nest_confects}} for details of how to interpret the result.
 
-The \code{filtered} column in the result indicates whether DESeq2 filtered the gene. Such genes do not count toward the total number of genes when controlling FDR. If your intention is to obtain a ranking of all genes, you should disable this with \code{deseq2_confects(..., cooksCutoff=Inf, independentFiltering=FALSE)}.
+The \code{filtered} column in the result indicates whether DESeq2 filtered
+the gene. Such genes do not count toward the total number of genes when
+controlling FDR. If your intention is to obtain a ranking of all genes, you
+should disable this with \code{deseq2_confects(..., cooksCutoff=Inf,
+independentFiltering=FALSE)}.
 }
 \description{
-For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate? This is built by repeatedly calling DESeq2::results with the "greaterAbs" alternative hypothesis.
+For all possible absolute log2 fold changes, which genes have at least this
+fold change at a specified False Discovery Rate? This is built by repeatedly
+calling DESeq2::results with the "greaterAbs" alternative hypothesis.
 }
 \details{
-Results are presented in a table such that for any given LFC, if the reader chooses the genes with abs(confect) less than this they are assured that this set of genes has at least this LFC (with the specified FDR). The confect column may also be viewed as a confidence bound on the LFC of each gene, with a dynamic correction for multiple testing.
+Results are presented in a table such that for any given LFC, if the reader
+chooses the genes with abs(confect) less than this they are assured that this
+set of genes has at least this LFC (with the specified FDR). The confect
+column may also be viewed as a confidence bound on the LFC of each gene, with
+a dynamic correction for multiple testing.
+}
+\examples{
+
+# Generate some random data
+n <- 20
+folds <- seq(-8,8,length.out=n)
+row_means <- runif(n, min=0, max=5)
+lib_scale <- c(1,2,3,4)
+means <- 2^(outer(folds, c(-0.5,-0.5,0.5,0.5))) *
+    row_means * rep(lib_scale,each=n)
+counts <- rnbinom(length(means), mu=means, size=1/0.1)
+dim(counts) <- dim(means)
+
+group <- factor(c("A","A","B","B"))
+
+# Apply DESeq2
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(
+   countData = counts,
+   colData = data.frame(group=group),
+   design = ~group)
+
+dds <- DESeq(dds)
+
+# Find top confident effect sizes
+deseq2_confects(dds, name="group_B_vs_A", step=0.1)
+
 }

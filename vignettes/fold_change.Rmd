@@ -17,7 +17,11 @@ params:
 
 This document shows typical Topconfects usage with limma, edgeR, or DESeq2.
 
-The first step is to load a dataset. Here, we're looking at RNA-seq data that investigates the response of *Arabodopsis thaliana* to a bacterial pathogen. Besides the experimental and control conditions, there is also a batch effect. This dataset is also examined in section 4.2 of the `edgeR` user manual, and I've followed the initial filtering steps in the `edgeR` manual.
+The first step is to load a dataset. Here, we're looking at RNA-seq data that
+investigates the response of *Arabodopsis thaliana* to a bacterial pathogen.
+Besides the experimental and control conditions, there is also a batch effect.
+This dataset is also examined in section 4.2 of the `edgeR` user manual, and
+I've followed the initial filtering steps in the `edgeR` manual.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.width=7, fig.height=6)
@@ -90,13 +94,17 @@ confects
 
 ### Looking at the result
 
-Here the usual `logFC` values estimated by `limma` are shown as dots, with lines to the `confect` value.
+Here the usual `logFC` values estimated by `limma` are shown as dots, with lines
+to the `confect` value.
 
 ```{r fig.height=7}
 confects_plot(confects)
 ```
 
-`confects_plot_me` overlays the confects (black) on a Mean-Difference Plot (grey) (as might be produced by `limma::plotMD`). As we should expect, the very noisy differences with low mean expression are removed if we look at the confects.
+`confects_plot_me` overlays the confects (black) on a Mean-Difference Plot
+(grey) (as might be produced by `limma::plotMD`). As we should expect, the very
+noisy differences with low mean expression are removed if we look at the
+confects.
 
 ```{r}
 confects_plot_me(confects)
@@ -111,9 +119,13 @@ top <- topTable(fit_eb, coef=4, n=Inf)
 rank_rank_plot(confects$table$name, rownames(top), "limma_confects", "topTable")
 ```
 
-You can see that the top 19 genes from topTable are all within the top 40 for topconfects ranking, but topconfects has also highly ranked some other genes. These have a large effect size, and sufficient if not overwhelming evidence of this.
+You can see that the top 19 genes from topTable are all within the top 40 for
+topconfects ranking, but topconfects has also highly ranked some other genes.
+These have a large effect size, and sufficient if not overwhelming evidence of
+this.
 
-An MD-plot highlighting the positions of the top 40 genes in both rankings also illustrates the differences between these two ways of ranking genes.
+An MD-plot highlighting the positions of the top 40 genes in both rankings also
+illustrates the differences between these two ways of ranking genes.
 
 ```{r}
 plotMD(fit, legend="bottomleft", status=paste0(
@@ -124,7 +136,8 @@ plotMD(fit, legend="bottomleft", status=paste0(
 
 ## edgeR analysis
 
-An analysis in edgeR produces similar results. Note that only quasi-likelihood testing from edgeR is supported.
+An analysis in edgeR produces similar results. Note that only quasi-likelihood
+testing from edgeR is supported.
 
 ### Standard edgeR analysis
 
@@ -162,7 +175,8 @@ plotMD(efit, legend="bottomleft", status=paste0(
 
 ## DESeq2 analysis
 
-DESeq2 does its own filtering of lowly expressed genes, so we start from the original count matrix. The initial steps are as for a normal DESeq2 analysis.
+DESeq2 does its own filtering of lowly expressed genes, so we start from the
+original count matrix. The initial steps are as for a normal DESeq2 analysis.
 
 ```{r message=F, warning=F}
 library(DESeq2)
@@ -178,13 +192,15 @@ dds <- DESeq(dds)
 
 ### Apply topconfects
 
-The contrast or coefficient to test is specified as in the `DESeq2::results` function.
+The contrast or coefficient to test is specified as in the `DESeq2::results`
+function.
 
 ```{r}
 dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock")
 ```
 
-DESeq2 offers shrunken estimates of LFC. This is another sensible way of ranking genes. Let's compare them to the confect values.
+DESeq2 offers shrunken estimates of LFC. This is another sensible way of ranking
+genes. Let's compare them to the confect values.
 
 ```{r}
 shrunk <- lfcShrink(dds, coef="Treat_hrcc_vs_mock", type="ashr")
@@ -193,7 +209,9 @@ dconfects$table$shrunk <- shrunk$log2FoldChange[dconfects$table$index]
 dconfects
 ```
 
-DESeq2 filters some genes, these are placed last in the table. If your intention is to obtain a ranking of all genes, you should disable this with `deseq2_confects(..., cooksCutoff=Inf, independentFiltering=FALSE)`.
+DESeq2 filters some genes, these are placed last in the table. If your intention
+is to obtain a ranking of all genes, you should disable this with
+`deseq2_confects(..., cooksCutoff=Inf, independentFiltering=FALSE)`.
 
 ```{r}
 table(dconfects$table$filtered)
@@ -209,21 +227,31 @@ confects_plot(dconfects) +
     geom_point(aes(x=shrunk, size=baseMean, color="lfcShrink"), alpha=0.75)
 ```
 
-`lfcShrink` aims for a best estimate of the LFC, whereas confect is a conservative estimate. `lfcShrink` can produce non-zero values for genes which can't be said to significantly differ from zero -- it doesn't do double duty as an indication of significance -- whereas the confect value will be `NA` in this case. The plot below compares these two quantities. Only un-filtered genes are shown (see above).
+`lfcShrink` aims for a best estimate of the LFC, whereas confect is a
+conservative estimate. `lfcShrink` can produce non-zero values for genes which
+can't be said to significantly differ from zero -- it doesn't do double duty as
+an indication of significance -- whereas the confect value will be `NA` in this
+case. The plot below compares these two quantities. Only un-filtered genes are
+shown (see above).
 
 ```{r}
 filter(dconfects$table, !filtered) %>%
-ggplot(aes(x=ifelse(is.na(confect),0,confect), y=shrunk, color=!is.na(confect))) +
+ggplot(aes(
+        x=ifelse(is.na(confect),0,confect), y=shrunk, color=!is.na(confect))) +
     geom_point() + geom_abline() + coord_fixed() + theme_bw() +
-    labs(color="Significantly\nnon-zero at\nFDR 0.05", x="confect", y="lfcShrink using ashr")
+    labs(color="Significantly\nnon-zero at\nFDR 0.05", 
+        x="confect", y="lfcShrink using ashr")
 ```
 
 ## Comparing results
 
 ```{r fig.height=7}
-rank_rank_plot(confects$table$name, econfects$table$name, "limma confects", "edgeR confects")
-rank_rank_plot(confects$table$name, dconfects$table$name, "limma confects", "DESeq2 confects")
-rank_rank_plot(econfects$table$name, dconfects$table$name, "edgeR confects", "DESeq2 confects")
+rank_rank_plot(confects$table$name, econfects$table$name, 
+    "limma confects", "edgeR confects")
+rank_rank_plot(confects$table$name, dconfects$table$name, 
+    "limma confects", "DESeq2 confects")
+rank_rank_plot(econfects$table$name, dconfects$table$name, 
+    "edgeR confects", "DESeq2 confects")
 ```
 
 ---

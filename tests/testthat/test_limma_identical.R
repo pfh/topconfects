@@ -1,5 +1,4 @@
-
-# Check limma_confects exactly matches topconfects:::limma_confects_limma
+context("topconfects TREAT implementation should exactly match limma's")
 
 library(limma)
 library(topconfects)
@@ -23,12 +22,23 @@ confects_standard <- limma_confects(cfit, coef=1)
 # Using limma's treat function
 confects_limma <- topconfects:::limma_confects_limma(cfit, coef=1)
 
+capture.output(file="test_limma_identical.out", {
+    cat("\nUsing topconfects implementation\n")
+    print(confects_standard)
+    cat("\nUsing limma\n")
+    print(confects_limma)
+})
+
 # Tables should match exactly
-stopifnot(identical(confects_standard$table, confects_limma$table))
+test_that("table identical", {
+    expect_equal(confects_standard$table, confects_limma$table)
+})
 
 # p values should match exactly
-for(lfc in c(0.5, 1.0, 2.0)) {
-    p <- confects_standard$pfunc(1:n, lfc)
-    p_limma <- confects_limma$pfunc(1:n, lfc)
-    stopifnot(identical(p, p_limma))
-}
+test_that("p values identical", {
+    for(lfc in c(0.5, 1.0, 2.0)) {
+        p <- confects_standard$pfunc(1:n, lfc)
+        p_limma <- confects_limma$pfunc(1:n, lfc)
+        expect_equal(p, p_limma)
+    }
+})

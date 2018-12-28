@@ -7,11 +7,45 @@
 confects_plot_me(confects)
 }
 \arguments{
-\item{confects}{A "Topconfects" class object, as returned from limma_confects, edger_confects, etc.}
+\item{confects}{A "Topconfects" class object, as returned from
+\code{limma_confects}, \code{edger_confects}, or \code{deseq2_confects}.}
 }
 \value{
-A ggplot2 object. Working non-interactively, you must print() this for it to be displayed.
+A ggplot2 object. Working non-interactively, you must print() this for it to
+be displayed.
 }
 \description{
-Like plotMD in limma, plots effect size against mean expression level. However shows "confect" on the y axis rather than "effect" ("effect" is shown underneath in grey). This may be useful for assessing whether effects are only being detected only in highly expressed genes.
+Like plotMD in limma, plots effect size against mean expression level.
+However shows "confect" on the y axis rather than "effect" ("effect" is shown
+underneath in grey). This may be useful for assessing whether effects are
+only being detected only in highly expressed genes.
+}
+\examples{
+
+library(NBPSeq)
+library(edgeR)
+library(limma)
+
+data(arab)
+
+# Extract experimental design from sample names
+treat <- factor(substring(colnames(arab),1,4), levels=c("mock","hrcc"))
+time <- factor(substring(colnames(arab),5,5))
+
+# Keep genes with at least 3 samples having an RPM of more than 2
+y <- DGEList(arab)
+keep <- rowSums(cpm(y)>2) >= 3
+y <- y[keep,,keep.lib.sizes=FALSE]
+y <- calcNormFactors(y)
+
+# Find top confident fold changes by topconfects-limma-voom method
+design <- model.matrix(~time+treat)
+voomed <- voom(y, design)
+fit <- lmFit(voomed, design)
+confects <- limma_confects(fit, "treathrcc")
+
+# Plot confident effect size against mean expression
+# (estimated effect size also shown as grey dots)
+confects_plot_me(confects)
+
 }

@@ -1,13 +1,20 @@
 
 #' Confident log2 fold changes based on a DESeq2 analysis
 #'
-#' For all possible absolute log2 fold changes, which genes have at least this fold change at a specified False Discovery Rate? This is built by repeatedly calling DESeq2::results with the "greaterAbs" alternative hypothesis. 
+#' For all possible absolute log2 fold changes, which genes have at least this
+#' fold change at a specified False Discovery Rate? This is built by repeatedly
+#' calling DESeq2::results with the "greaterAbs" alternative hypothesis.
 #'
-#' Results are presented in a table such that for any given LFC, if the reader chooses the genes with abs(confect) less than this they are assured that this set of genes has at least this LFC (with the specified FDR). The confect column may also be viewed as a confidence bound on the LFC of each gene, with a dynamic correction for multiple testing.
+#' Results are presented in a table such that for any given LFC, if the reader
+#' chooses the genes with abs(confect) less than this they are assured that this
+#' set of genes has at least this LFC (with the specified FDR). The confect
+#' column may also be viewed as a confidence bound on the LFC of each gene, with
+#' a dynamic correction for multiple testing.
 #'
 #' @param object Object produced by the \code{DESeq2::DESeq} function.
 #'
-#' @param ... Further arguments to \code{DESeq2::results}. At a minimum you should specify either \code{contrast=} or \code{name=}.
+#' @param ... Further arguments to \code{DESeq2::results}. At a minimum you
+#'   should specify either \code{contrast=} or \code{name=}.
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
@@ -17,7 +24,37 @@
 #'
 #' See \code{\link{nest_confects}} for details of how to interpret the result.
 #'
-#' The \code{filtered} column in the result indicates whether DESeq2 filtered the gene. Such genes do not count toward the total number of genes when controlling FDR. If your intention is to obtain a ranking of all genes, you should disable this with \code{deseq2_confects(..., cooksCutoff=Inf, independentFiltering=FALSE)}.
+#' The \code{filtered} column in the result indicates whether DESeq2 filtered
+#' the gene. Such genes do not count toward the total number of genes when
+#' controlling FDR. If your intention is to obtain a ranking of all genes, you
+#' should disable this with \code{deseq2_confects(..., cooksCutoff=Inf,
+#' independentFiltering=FALSE)}.
+#'
+#' @examples
+#'
+#' # Generate some random data
+#' n <- 20
+#' folds <- seq(-8,8,length.out=n)
+#' row_means <- runif(n, min=0, max=5)
+#' lib_scale <- c(1,2,3,4)
+#' means <- 2^(outer(folds, c(-0.5,-0.5,0.5,0.5))) *
+#'     row_means * rep(lib_scale,each=n)
+#' counts <- rnbinom(length(means), mu=means, size=1/0.1)
+#' dim(counts) <- dim(means)
+#'
+#' group <- factor(c("A","A","B","B"))
+#'
+#' # Apply DESeq2
+#' library(DESeq2)
+#' dds <- DESeqDataSetFromMatrix(
+#'    countData = counts,
+#'    colData = data.frame(group=group),
+#'    design = ~group)
+#'
+#' dds <- DESeq(dds)
+#'
+#' # Find top confident effect sizes
+#' deseq2_confects(dds, name="group_B_vs_A", step=0.1)
 #'
 #' @export
 deseq2_confects <- function(object, ..., fdr=0.05, step=0.01) {
@@ -34,11 +71,13 @@ deseq2_confects <- function(object, ..., fdr=0.05, step=0.01) {
     pfunc <- function(subset_i, mag) {
         i <- subset_out[subset_i]
 
-        result <- DESeq2::results(object, ..., altHypothesis="greaterAbs", lfcThreshold=mag)
+        result <- DESeq2::results(
+            object, ..., altHypothesis="greaterAbs", lfcThreshold=mag)
         result_p <- result$pvalue[i]
 
         # This should never happen:
-        assert_that(!any(is.na(result_p)), msg="unexpected extra filtering by DESeq2")
+        assert_that(!any(is.na(result_p)),
+            msg="unexpected extra filtering by DESeq2")
 
         result_p
     }
@@ -48,15 +87,15 @@ deseq2_confects <- function(object, ..., fdr=0.05, step=0.01) {
 
     if (subset_n < n) {
         extra <- data.frame(
-            rank=(subset_n+1):n, 
-            index=which(filtered), 
+            rank=(subset_n+1):n,
+            index=which(filtered),
             confect=rep(NA,n-subset_n))
         confects$table <- rbind(confects$table, extra)
     }
 
     confects$table$effect <- std_result$log2FoldChange[confects$table$index]
-    confects$table$confect <- sign(confects$table$effect) * confects$table$confect
-    
+    confects$table$confect <- sign(confects$table$effect)*confects$table$confect
+
     confects$table$baseMean <- std_result$baseMean[confects$table$index]
     confects$table$name <- rownames(object)[confects$table$index]
     confects$table$filtered <- filtered[confects$table$index]
