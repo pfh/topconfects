@@ -2,16 +2,16 @@
 % Please edit documentation in R/nest_confects.R
 \name{nest_confects}
 \alias{nest_confects}
-\title{General purpose function to find sets of discoveries for a range of effect
-sizes, controlling FDR}
+\title{General purpose function to find confident effect sizes, controlling FDR}
 \usage{
 nest_confects(n, pfunc, fdr = 0.05, step = 0.001, full = FALSE)
 }
 \arguments{
 \item{n}{Number of items being tested.}
 
-\item{pfunc}{A function(indices, effect_size) to calculate p-values. Indices
-is a subset of 1:n giving the p-values to be computed.}
+\item{pfunc}{A \code{function(indices, effect_size)} to calculate p-values.
+Indices is a subset of 1:n giving the p-values to be computed. Should
+return a numeric vector of length \code{length(indices)}.}
 
 \item{fdr}{False Discovery Rate to control for.}
 
@@ -21,41 +21,45 @@ is a subset of 1:n giving the p-values to be computed.}
 non-zero. Note that this is against the spirit of the topconfects approach.}
 }
 \value{
-A "Topconfects" object, containing a table of results and various
-  associated information.
+A "Topconfects" object, containing a table of results and various associated
+information.
 
-  The most important part of this object is the $table element, a data frame
-  with the following columns:
+The most important part of this object is the $table element, a data frame
+with the following columns:
 
-  \itemize{ \item \code{rank} - Ranking by \code{confect} and for equal
-  \code{confect} by p-value at that effect size. \item \code{index} - Number
-  of the test, between 1 and n. \item \code{confect} - CONfident efFECT size.
-  }
+\itemize{ \item \code{rank} - Ranking by \code{confect} and for equal
+\code{confect} by p-value at that effect size. \item \code{index} - Number of
+the test, between 1 and n. \item \code{confect} - CONfident efFECT size. }
 
-  The usage is as follows: To find a set of tests which have effect size
-  greater than x with the specified FDR, take the rows with
-  \code{abs(confect) >= x}. Once the set is selected, the confect values
-  provide confidence bounds on the effect size with False Coverage-statement
-  Rate (FCR) at the same level as the FDR.
+The usage is as follows: To find a set of tests which have effect size
+greater than x with the specified FDR, take the rows with \code{abs(confect)
+>= x}. Once the set is selected, the confect values provide confidence bounds
+on the effect size with False Coverage-statement Rate (FCR) at the same level
+as the FDR.
 
-  One may essentially take the top however many rows of the data frame and
-  these will be the best set of results of that size to dependably have an
-  effect size that is as large as possible. However if some genes have the
-  same \code{abs(confect)}, all or none should be selected.
+One may essentially take the top however many rows of the data frame and
+these will be the best set of results of that size to dependably have an
+effect size that is as large as possible. However if some genes have the same
+\code{abs(confect)}, all or none should be selected.
 
-  Some rows in the output may be given the same \code{confect}, even if
-  \code{step} is made small. This is an expected behaviour of the algorithm.
-  (This is similar to FDR adjustment of p-values sometimes resulting in a run
-  of the same adjusted p-value, even if all the input p-values are distinct.)
+Some rows in the output may be given the same \code{confect}, even if
+\code{step} is made small. This is an expected behaviour of the algorithm.
+(This is similar to FDR adjustment of p-values sometimes resulting in a run
+of the same adjusted p-value, even if all the input p-values are distinct.)
 
-  Some wrappers around this function may add a sign to the \code{confect}
-  column, if it makes sense to do so. They will also generally add an
-  \code{effect} column, containing an estimate of the effect size that aims
-  to be unbiassed rather than a conservative lower bound.
+Some wrappers around this function may add a sign to the \code{confect}
+column, if it makes sense to do so. They will also generally add an
+\code{effect} column, containing an estimate of the effect size that aims to
+be unbiassed rather than a conservative lower bound.
 }
 \description{
 Find sets of discoveries for a range of effect sizes, controlling the False
 Discovery Rate (FDR) for each set.
+}
+\details{
+This is a general purpose function, which can be applied to any method of
+calculting p-values (supplied as a function argument) for the null hypothesis
+that the effect size is smaller than a given amount.
 }
 \examples{
 

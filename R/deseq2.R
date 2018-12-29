@@ -47,9 +47,9 @@
 #' # Apply DESeq2
 #' library(DESeq2)
 #' dds <- DESeqDataSetFromMatrix(
-#'    countData = counts,
-#'    colData = data.frame(group=group),
-#'    design = ~group)
+#'     countData = counts,
+#'     colData = data.frame(group=group),
+#'     design = ~group)
 #'
 #' dds <- DESeq(dds)
 #'

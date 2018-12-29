@@ -42,3 +42,4 @@ test_that("p values identical", {
         expect_equal(p, p_limma)
     }
 })
+

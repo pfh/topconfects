@@ -12,7 +12,7 @@ check : document
 #check :
 #	Rscript -e "devtools::check()"
 
-bioccheck :
+bioccheck : document
 	R CMD BiocCheck .
 
 document :

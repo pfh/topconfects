@@ -149,7 +149,7 @@ efit <- glmQLFit(y, design, robust=TRUE)
 ### Apply topconfects
 
 ```{r edger_confects}
-econfects <- edger_confects(efit, coef=4, fdr=0.05)
+econfects <- edger_confects(efit, coef=4, fdr=0.05, step=0.02)
 
 econfects
 ```
@@ -196,7 +196,7 @@ The contrast or coefficient to test is specified as in the `DESeq2::results`
 function.
 
 ```{r}
-dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock")
+dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock", step=0.02)
 ```
 
 DESeq2 offers shrunken estimates of LFC. This is another sensible way of ranking
