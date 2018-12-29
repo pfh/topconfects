@@ -1,0 +1,18 @@
+
+bibentry(
+    bibtype="Article",
+    title=paste0(
+        "Topconfects: a package for confident effect sizes in ",
+        "differential expression analysis provides improved usability ",
+        "ranking genes of interest"),
+    author=c(
+        person(c("Paul","F"),"Harrison"),
+        person(c("Andrew","D"),"Pattison"),
+        person(c("David","R"),"Powell"),
+        person(c("Traude","H"),"Beilharz")
+    ),
+    year="2018",
+    publisher="Cold Spring Harbor Laboratory",
+    journal="bioRxiv",
+    doi="10.1101/343145"
+)
