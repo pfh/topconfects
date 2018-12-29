@@ -1,11 +1,16 @@
 
 quick : document
 	R CMD build --no-build-vignettes .
-	R CMD check --no-build-vignettes topconfects_*.tar.gz
+	R_CHECK_ENVIRON=check.Renviron R CMD check --no-build-vignettes topconfects_*.tar.gz
 	rm topconfects_*.tar.gz
 
-check :
-	Rscript -e "devtools::check()"
+check : document
+	R CMD build .
+	R_CHECK_ENVIRON=check.Renviron R CMD check topconfects_*.tar.gz
+	rm topconfects_*.tar.gz
+
+#check :
+#	Rscript -e "devtools::check()"
 
 bioccheck :
 	R CMD BiocCheck .

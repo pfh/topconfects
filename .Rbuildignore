@@ -8,3 +8,5 @@
 ^MBP-logo\.png$
 ^test_rmds
 ^docs$
+^check\.Renviron$
+
