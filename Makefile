@@ -1,4 +1,7 @@
 
+# Obtain check.Renviron with:
+# wget https://raw.githubusercontent.com/Bioconductor/packagebuilder/master/check.Renviron
+
 quick : document
 	R CMD build --no-build-vignettes .
 	R_CHECK_ENVIRON=check.Renviron R CMD check --no-build-vignettes topconfects_*.tar.gz

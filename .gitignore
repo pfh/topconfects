@@ -29,4 +29,5 @@ vignettes/*.pdf
 inst/doc
 /tests/testthat/*.cache
 /tests/testthat/*.out
+check.Renviron
 

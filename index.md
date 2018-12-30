@@ -25,10 +25,12 @@ Use [limma_confects](reference/limma_confects.html), [edger_confects](reference/
 
 ## Install
 
+Current git master branch specifies R 3.6. Please use release 1.1.4 if you are using R 3.5.
+
 ```r
 install.packages("devtools")
 
-devtools::install_github("pfh/topconfects")
+devtools::install_github("pfh/topconfects@v1.1.4")
 
 library(topconfects)
 ```
