@@ -1,7 +1,7 @@
 
 quick : document
 	R CMD build --no-build-vignettes .
-	R CMD check --no-build-vignettes topconfects_*.tar.gz
+	R CMD check --no-build-vignettes topconfectswald_*.tar.gz
 	rm topconfectswald_*.tar.gz
 
 check :

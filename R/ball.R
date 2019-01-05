@@ -1,4 +1,6 @@
 
+# TODO: there are valid upper bounds for this as well
+
 # TODO: proportion weighter
 
 
@@ -40,19 +42,19 @@ p_in_ball_function <- function(x,S,df, tol=1e-7) {
         pf(chisq/df1, df1, df, lower.tail=FALSE)
     }
 
-    list(df1=n, pfunc=pfunc)
+    list(df1=df1, pfunc=pfunc)
 }
 
 #' 
 #'
 #' @export
 ball_confects <- function(effect, covar, df=Inf, fdr=0.05, step=0.001, full=FALSE) {
-    n <- length(effects)
+    n <- length(effect)
 
     # Sanity check
     assert_that(is.list(effect))
     assert_that(is.list(covar))
-    assert_that(length(covars) == n)
+    assert_that(length(covar) == n)
     for(i in seq_len(n)) {
         assert_that(nrow(covar[[i]]) == length(effect[[i]]))
         assert_that(ncol(covar[[i]]) == length(effect[[i]]))
@@ -64,13 +66,16 @@ ball_confects <- function(effect, covar, df=Inf, fdr=0.05, step=0.001, full=FALS
     })
 
     pfunc <- function(indices, mag) {
-        map_dbl(indices, function(f) {
-            p_funcs[[i]]$pfunc(mag)
+        map_dbl(indices, function(i) {
+            pfuncs[[i]]$pfunc(mag)
         })
     }
 
     confects <- nest_confects(n, pfunc, fdr=fdr, step=step, full=full)
-    confects$table$effect <- effect[confects$table$index]
+    
+    confects$table$effect <- map_dbl(
+        effect[confects$table$index], ~sqrt(sum(.*.)))
+    confects$table$estimates <- effect[confects$table$index]
 
     # FCR correction assuming number of discoveries is number 
     # of items with confect >= the current item's confect
@@ -79,7 +84,7 @@ ball_confects <- function(effect, covar, df=Inf, fdr=0.05, step=0.001, full=FALS
     # Note: we don't do anything about different items having different sizes, so this is FCR
     #       control assuming we uniformly randomly pick a discovery 
     #       and then uniformly randomly pick an interval
-    n_discoveries <- rank(-confects$confect, na.last=TRUE, ties.method="max")
+    n_discoveries <- rank(-confects$table$confect, na.last=TRUE, ties.method="max")
     lower <- rep(list(NULL), n)
     upper <- rep(list(NULL), n)
     for(i in seq_len(n)) {
@@ -99,13 +104,15 @@ ball_confects <- function(effect, covar, df=Inf, fdr=0.05, step=0.001, full=FALS
     confects$table$upper <- upper
 
     if (full) {
-        confects$table$covar <- covar[[confects$table$index]]
+        confects$table$covar <- covar[confects$table$index]
         confects$table$df1 <- map_dbl(pfuncs, "df1")[confects$table$index]
-        confects$table$df2 <- df[[confects$table$index]]
+        confects$table$df2 <- df[confects$table$index]
         fdr_zero <- confects$table$fdr_zero
         confects$table$fdr_zero <- NULL
         confects$table$fdr_zero <- fdr_zero
     }
+    
+    confects$limits <- c(0,NA)
 
     confects
 }
@@ -127,7 +134,7 @@ weighted_fit_and_contrast <- function(X,y,w,contrasts) {
     coef <- as.vector(estimator %*% y)
     residuals <- y - as.vector(X %*% coef)
 
-    contrast_esimtator <- crossprod(contrasts, estimator)
+    contrast_estimator <- crossprod(contrasts, estimator)
     effect <- as.vector(contrast_estimator %*% y)
     covar_unscaled <- tcrossprod(contrast_estimator, contrast_estimator)
 
@@ -143,6 +150,21 @@ weighted_fit_and_contrast <- function(X,y,w,contrasts) {
 lm_ball_confects <- function(
         y, design, contrasts, weights=NULL, 
         squeeze_var=TRUE, fdr=0.05, step=0.001, full=FALSE) {
+    eawp <- limma::getEAWP(y)
+    y <- eawp$exprs
+    infos <- eawp$probes
+    if (is.null(weights)) {
+        if (is.null(eawp$weights)) {
+            weights <- matrix(1, nrow=nrow(y), ncol=ncol(y))
+        } else {
+            weights <- eawp$weights
+        }
+    } else {
+        if (!is.null(eawp$weights)) {
+            warning("Weights in \"y\" overridden by parameter \"weights\"")
+        }
+    }
+    
     assert_that(is.matrix(y))
     assert_that(is.matrix(weights))
     assert_that(is.matrix(design))
@@ -153,34 +175,52 @@ lm_ball_confects <- function(
     assert_that(ncol(weights) == m)
     assert_that(nrow(design) == m)
     p <- ncol(design)
-    assert_that(ncol(contrasts) == p)
+    assert_that(nrow(contrasts) == p)
 
     fits <- map(seq_len(n), function(i) {
         weighted_fit_and_contrast(design, y[i,], weights[i,], contrasts)
     })
 
     df <- map_dbl(fits, "df")
-    rss <- mab_dbl(fits, "rss")
+    rss <- map_dbl(fits, "rss")
 
-    scale <- rss/df
+    scale2 <- rss/df
 
     if (squeeze_var) {
-        squeeze <- limma::squeezeVar(scale, df)
+        squeeze <- limma::squeezeVar(scale2, df)
         df <- df + squeeze$df.prior
-        scale <- squeeze$var.post 
+        scale2 <- squeeze$var.post 
     }
 
     effect <- map(fits, "effect")
     covar <- map(seq_len(n), function(i) {
-        fits[[i]]$covar_unscaled * scale[i]
+        fits[[i]]$covar_unscaled * scale2[i]
     })
 
-    result <- ball_confects(effect, covar, df, fdr=fdr, step=step, full=full)
+    confects <- ball_confects(
+        effect, covar, df, fdr=fdr, step=step, full=full)
 
-    if (squeeze_var)
-        result$squeeze <- squeeze
+    confects$table$average <- map_dbl(confects$table$index, function(i) {
+        mean(y[i,weights[i,]>0], na.rm=TRUE)
+    })
+    if (!is.null(rownames(y))) {
+        confects$table$name <- rownames(y)[confects$table$index]
+    } else {
+        confects$table$name <- as.character(confects$table$index)
+    }
 
-    result
+    if (!is.null(infos)) {
+        confects$table <- cbind(
+            confects$table, infos[confects$table$index,,drop=FALSE])
+    }
+
+    if (squeeze_var) {
+        confects$squeeze <- squeeze
+    }
+    confects$design <- design
+    confects$contrasts <- contrasts
+
+    confects
 }
 
 

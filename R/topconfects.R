@@ -7,8 +7,13 @@
 methods::setClass("Topconfects", methods::representation("list"))
 
 methods::setMethod("show", "Topconfects", function(object) {
+    table <- head(object$table, 10)
+    for(i in seq_len(ncol(table)))
+        if (is.list(table[[i]]))
+            table[[i]] <- rep("...",nrow(table))
+    
     cat("$table\n")
-    print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
+    print.data.frame(table, right=FALSE, row.names=FALSE)
     if (nrow(object$table) > 10) cat("...\n")
     cat(confects_description(object))
 })
@@ -35,6 +40,10 @@ confects_description <- function(confects) {
     if (!is.null(confects$limma_fit) && length(confects$limma_fit$df.prior) == 1)
         result <- paste0(result,
             "Prior df ", sprintf("%.1f", confects$limma_fit$df.prior), "\n")
+
+    if (!is.null(confects$squeeze))
+        result <- paste0(result,
+            "Prior df ", sprintf("%.1f", confects$squeeze$df.prior), "\n")
 
     if (!is.null(confects$edger_fit$dispersion))
         result <- paste0(result,
@@ -73,7 +82,7 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     
     mag_col <- confects$magnitude_column
     if (is.null(mag_col))
-        mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+        mag_col <- first_match(c("logCPM", "AveExpr", "baseMean", "average"), names(tab))
     mag_desc <- confects$magnitude_desc
     if (is.null(mag_desc))
         mag_desc <- mag_col
@@ -143,7 +152,7 @@ confects_plot_me <- function(confects) {
 
     mag_col <- confects$magnitude_column
     if (is.null(mag_col))
-        mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+        mag_col <- first_match(c("logCPM", "AveExpr", "baseMean", "average"), names(tab))
     mag_desc <- confects$magnitude_desc
     if (is.null(mag_desc))
         mag_desc <- mag_col
