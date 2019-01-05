@@ -23,7 +23,7 @@
 #'
 #'@export
 normal_confects <- function(effect, se, df=Inf, signed=TRUE, fdr=0.05, step=0.001, full=FALSE) {
-    n <- max(length(mean), length(se), length(df))
+    n <- max(length(effect), length(se), length(df))
     effect <- broadcast(effect, n)
     se <- broadcast(se, n)
     df <- broadcast(df, n)
