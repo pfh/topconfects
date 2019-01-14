@@ -1,4 +1,7 @@
 
+Changes in version 0.99.2 (2019-01-15)
++ Version bumped to test web-hook and Bioconductor automated build system.
+
 Changes in version 0.99.1 (2018-12-30)
 + Switch to required version number for Bioconductor submission.
 + Switch email to address subscribed to bioc-devel.
