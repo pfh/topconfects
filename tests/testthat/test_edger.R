@@ -1,6 +1,5 @@
 context("Test edgeR-based routines")
 
-# Currently just tests that no errors happen
 # test_edger.out can be examined
 
 library(edgeR)
@@ -27,6 +26,8 @@ fit <- glmQLFit(y, design)
 set.seed(12345)
 confects <- edger_confects(fit, contrast=c(-1,1))
 
+achieved_fcrs <- cumsum(folds[confects$table$index]/confects$table$confect <= 1) / (1:n)
+
 capture.output(file="test_edger.out", {
     cat("\ncounts\n")
     print(counts)
@@ -38,5 +39,10 @@ capture.output(file="test_edger.out", {
     print(confects)
     cat("\nconfects$table\n")
     print(confects$table)
+    cat("\nAchieved FCRs\n")
+    print(achieved_fcrs)
 })
 
+test_that("FCR of 5% for all heads of table", {
+    expect(all(achieved_fcrs <= 0.05, na.rm=TRUE), "FCR not controlled")
+})

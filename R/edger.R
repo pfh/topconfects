@@ -58,9 +58,13 @@
 #' @export
 edger_confects <- function(
         fit, coef=NULL, contrast=NULL,
-        fdr=0.05, step=0.01, null="worst.case") {
+        fdr=0.05, step=0.01, null=c("worst.case","interval")) {
+    assert_that(requireNamespace("edgeR", quietly=TRUE), msg=
+        "edger_confects requires installing the Bioconductor package 'edgeR'")
     assert_that(is(fit, "DGEGLM"))
     assert_that((!is.null(coef)) + (!is.null(contrast)) == 1)
+
+    null <- match.arg(null)
 
     n <- nrow(fit)
 

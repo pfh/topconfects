@@ -64,6 +64,8 @@
 #' @export
 limma_confects <- function(
         fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE, full=FALSE) {
+    assert_that(requireNamespace("limma", quietly=TRUE), msg=
+        "limma_confects requires installing the Bioconductor package 'limma'")
     assert_that(is(fit, "MArrayLM"), msg="fit must be an MArrayLM object")
 
     if (is.null(coef) && ncol(fit$coefficients) == 1)
@@ -104,6 +106,8 @@ limma_confects <- function(
 #
 limma_confects_limma <- function(
         fit, coef=NULL, fdr=0.05, step=0.001, trend=FALSE) {
+    assert_that(requireNamespace("limma", quietly=TRUE), msg=
+    "limma_confects_limma requires installing the Bioconductor package 'limma'")
     assert_that(is(fit, "MArrayLM"), msg="fit must be an MArrayLM object")
 
     if (is.null(coef) && ncol(fit$coefficients) == 1)

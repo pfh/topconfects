@@ -58,6 +58,9 @@
 #'
 #' @export
 deseq2_confects <- function(object, ..., fdr=0.05, step=0.01) {
+    assert_that(requireNamespace("DESeq2", quietly=TRUE), msg=
+        "deseq2_confects requires installing the Bioconductor package 'DESeq2'")
+
     n <- nrow(object)
 
     # Calculate effect column, determine which genes are filtered by DESeq2

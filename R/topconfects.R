@@ -3,9 +3,9 @@
 # Topconfects result class definition
 #
 
-methods::setClass("Topconfects", methods::representation("list"))
+setClass("Topconfects", representation("list"))
 
-methods::setMethod("show", "Topconfects", function(object) {
+setMethod("show", "Topconfects", function(object) {
     cat("$table\n")
     print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
     if (nrow(object$table) > 10) cat("...\n")
