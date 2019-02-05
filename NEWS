@@ -1,4 +1,7 @@
 
+Changes in version 0.99.4 (2019-02-06)
++ Reduce build time of vignette.
+
 Changes in version 0.99.3 (2019-02-05)
 + Where :: is used, use requireNamespace first to give an informative error message.
 + Use match.arg in edger_confects.

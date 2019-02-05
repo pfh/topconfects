@@ -148,8 +148,12 @@ efit <- glmQLFit(y, design, robust=TRUE)
 
 ### Apply topconfects
 
+A step of 0.05 is used here merely so that the vignette will build quickly. 
+`edger_confects` calls `edgeR::glmTreat` repeatedly, which is necessarily slow.
+In practice a smaller value such as 0.01 should be used.
+
 ```{r edger_confects}
-econfects <- edger_confects(efit, coef=4, fdr=0.05, step=0.02)
+econfects <- edger_confects(efit, coef=4, fdr=0.05, step=0.05)
 
 econfects
 ```
@@ -193,10 +197,13 @@ dds <- DESeq(dds)
 ### Apply topconfects
 
 The contrast or coefficient to test is specified as in the `DESeq2::results`
-function.
+function. The step of 0.05 is merely so that this vignette will build quickly, 
+in practice a smaller value such as 0.01 should be used. `deseq2_confects` 
+calls `results` repeatedly, and in fairness `results` 
+has not been optimized for this.
 
 ```{r}
-dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock", step=0.02)
+dconfects <- deseq2_confects(dds, name="Treat_hrcc_vs_mock", step=0.05)
 ```
 
 DESeq2 offers shrunken estimates of LFC. This is another sensible way of ranking
