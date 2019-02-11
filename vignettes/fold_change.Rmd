@@ -34,6 +34,8 @@ library(topconfects)
 library(NBPSeq)
 library(edgeR)
 library(limma)
+library("AnnotationDbi")
+library("org.At.tair.db")
 
 library(dplyr)
 library(ggplot2)
@@ -51,7 +53,7 @@ info <-
         GENENAME=paste(unique(na.omit(GENENAME)),collapse="/"))
 arab_info <- 
     info[match(rownames(arab),info$TAIR),] %>% 
-    select(-TAIR) %>%
+    dplyr::select(-TAIR) %>%
     as.data.frame
 rownames(arab_info) <- rownames(arab)
 
