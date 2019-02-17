@@ -4,6 +4,13 @@ TOP results by CONfident efFECT Size. Topconfects is intended for RNA-seq or mic
 
 * [Main website](http://logarithmic.net/topconfects/)
 
+## Topconfects is in Bioconductor 3.9
+
+As at February 2019, Bioconductor 3.9 is the development version of Bioconductor. Future development will occur in the Bioconductor git server.
+
+* [Topconfects in Bioconductor](https://bioconductor.org/packages/topconfects)
+
+## Author
 
 Topconfects is developed by Paul Harrison [@paulfharrison](https://twitter.com/paulfharrison) paul.harrison@monash.edu, for the [Monash Bioinformatics Platform](https://platforms.monash.edu/bioinformatics/).
 

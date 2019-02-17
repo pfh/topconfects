@@ -15,6 +15,20 @@ The method is described in:
 
 <br/>
 
+
+# Topconfects is in Bioconductor 3.9
+
+As at February 2019, Bioconductor 3.9 is the development version of [Bioconductor](https://bioconductor.org). Once Bioconductor 3.9 is released, please use Bioconductor to obtain topconfects. Future development will occur in the Bioconductor git server.
+
+* [Topconfects in Bioconductor](https://bioconductor.org/packages/topconfects)
+
+```r
+# For R 3.6+ and Bioconductor 3.9+:
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("topconfects")
+```
+
 ## Usage
 
 Use [limma_confects](reference/limma_confects.html), [edger_confects](reference/edger_confects.html), or [deseq2_confects](reference/deseq2_confects.html) as part of your limma, edgeR, or DESeq2 analysis (the limma method is currently much faster than other methods).
@@ -25,12 +39,14 @@ Use [limma_confects](reference/limma_confects.html), [edger_confects](reference/
 
 ## Install
 
-Current git master branch specifies R 3.6. Please use release 1.1.4 if you are using R 3.5.
+Once Bioconductor 3.9 is released (should be first half of 2019), please use the Bioconductor version, see above.
+
+topconfects can be installed from the GitHub repository with:
 
 ```r
 install.packages("devtools")
 
-devtools::install_github("pfh/topconfects@v1.1.4")
+devtools::install_github("pfh/topconfects")
 
 library(topconfects)
 ```
