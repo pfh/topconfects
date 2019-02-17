@@ -1,4 +1,7 @@
 
+Changes in version 0.99.5 (2019-02-18)
++ Include a vignette giving an overview of the package's functions.
+
 Changes in version 0.99.4 (2019-02-06)
 + Reduce build time of vignette.
 
