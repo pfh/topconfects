@@ -41,4 +41,8 @@ library(topconfectsql)
 
 Topconfects is developed by Paul Harrison [@paulfharrison](https://twitter.com/paulfharrison) paul.harrison@monash.edu, for the [Monash Bioinformatics Platform](https://platforms.monash.edu/bioinformatics/).
 
+This software is Copyright 2018 Paul Harrison, distributed under the terms of the GNU Lesser General Public License version 2.1 (see file LICENSE).
+
 <a href="https://platforms.monash.edu/bioinformatics/"><img src="https://raw.githubusercontent.com/pfh/topconfects/master/MBP-logo.png" height="88"></a>
+
+
