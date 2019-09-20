@@ -13,7 +13,8 @@ check : document
 	rm topconfects_*.tar.gz
 
 bioccheck : document
-	R CMD BiocCheck .
+	#R CMD BiocCheck .
+	Rscript -e "BiocCheck::BiocCheck()"
 
 document :
 	Rscript -e "devtools::document()"
