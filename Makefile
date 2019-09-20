@@ -12,9 +12,6 @@ check : document
 	R_CHECK_ENVIRON=check.Renviron R CMD check topconfects_*.tar.gz
 	rm topconfects_*.tar.gz
 
-#check :
-#	Rscript -e "devtools::check()"
-
 bioccheck : document
 	R CMD BiocCheck .
 
@@ -24,12 +21,10 @@ document :
 test :
 	Rscript -e "devtools::test()"
 
+vignette :
+	@echo file:///`pwd`/doc
+	Rscript -e "devtools::build_vignettes()"
+
 install : document
 	Rscript -e "devtools::install()"
-
-site : install
-	echo "pkgdown::build_site()" |R --vanilla
-
-publish : 
-	scp -r docs/* logarithmic.net:www/topconfects/
 
