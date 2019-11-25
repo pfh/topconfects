@@ -12,7 +12,7 @@ setMethod("show", "Topconfects", function(object) {
     cat(confects_description(object))
 })
 
-first_match <- function(avail, options, default=NULL) {
+first_match <- function(options, avail, default=NULL) {
     good <- options[options %in% avail]
     if (length(good) == 0) return(default)
     good[1]
