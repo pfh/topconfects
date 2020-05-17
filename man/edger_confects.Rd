@@ -4,8 +4,14 @@
 \alias{edger_confects}
 \title{Confident log2 fold change based on the edgeR Quasi-Likelihood method}
 \usage{
-edger_confects(fit, coef = NULL, contrast = NULL, fdr = 0.05,
-  step = 0.01, null = c("worst.case", "interval"))
+edger_confects(
+  fit,
+  coef = NULL,
+  contrast = NULL,
+  fdr = 0.05,
+  step = 0.01,
+  null = c("worst.case", "interval")
+)
 }
 \arguments{
 \item{fit}{An edgeR DGEGLM object produced using \code{glmQLFit}.}

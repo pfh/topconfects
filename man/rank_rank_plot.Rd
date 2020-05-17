@@ -4,8 +4,13 @@
 \alias{rank_rank_plot}
 \title{A plot to compare two rankings}
 \usage{
-rank_rank_plot(vec1, vec2, label1 = "First ranking",
-  label2 = "Second ranking", n = 40)
+rank_rank_plot(
+  vec1,
+  vec2,
+  label1 = "First ranking",
+  label2 = "Second ranking",
+  n = 40
+)
 }
 \arguments{
 \item{vec1}{A vector of names.}

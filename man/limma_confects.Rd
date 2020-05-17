@@ -4,8 +4,14 @@
 \alias{limma_confects}
 \title{Confident log2 fold changes based on a limma fit object}
 \usage{
-limma_confects(fit, coef = NULL, fdr = 0.05, step = 0.001,
-  trend = FALSE, full = FALSE)
+limma_confects(
+  fit,
+  coef = NULL,
+  fdr = 0.05,
+  step = 0.001,
+  trend = FALSE,
+  full = FALSE
+)
 }
 \arguments{
 \item{fit}{A limma MArrayLM object.}

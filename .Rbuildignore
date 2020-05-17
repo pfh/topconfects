@@ -11,4 +11,4 @@
 ^test_rmds
 ^docs$
 ^check\.Renviron$
-
+^\.travis\.yml
