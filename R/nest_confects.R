@@ -14,6 +14,9 @@
 #' @param pfunc A \code{function(indices, effect_size)} to calculate p-values.
 #'   Indices is a subset of 1:n giving the p-values to be computed. Should
 #'   return a numeric vector of length \code{length(indices)}.
+#'   May return NA values. 
+#'   If an NA value is returned, NA must be returned for all effect sizes. 
+#'   NA values are not counted toward the total number of tests performed.
 #'
 #' @param fdr False Discovery Rate to control for.
 #'
@@ -70,18 +73,32 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.001, full=FALSE) {
     indices <- seq_len(n)
     mags <- rep(NA, n)
 
+    # Calculate all p-values with effect size 0.
+    # This lets us work out if any are missing.
+    pfunc_all_0 <- pfunc(indices, 0.0)
+    good <- !is.na(pfunc_all_0)
+    n_good <- sum(good)
+
+    indices <- c(indices[good], indices[!good])
+    n_active <- n_good
+
     steps <- 0
-    n_active <- n
     while(n_active > 0) {
         mag <- steps * step
         seq_active <- seq_len(n_active)
-        p <- pfunc(indices[seq_active], mag)
+
+        # Re-use original pfunc call first time around
+        if (mag == 0)
+            p <- pfunc_all_0[indices[seq_active]]
+        else
+            p <- pfunc(indices[seq_active], mag)
+        
         ordering <- order(p)
         p <- p[ordering]
         indices[seq_active] <- indices[ordering]
         mags[seq_active] <- mags[ordering]
 
-        while(n_active > 0 && p[n_active] > fdr*n_active/n)
+        while(n_active > 0 && p[n_active] > fdr*n_active/n_good)
             n_active <- n_active - 1
 
         mags[seq_len(n_active)] <- mag
@@ -91,7 +108,7 @@ nest_confects <- function(n, pfunc, fdr=0.05, step=0.001, full=FALSE) {
     table <- data.frame(rank=seq_len(n), index=indices, confect=mags)
     if (full) {
         table$fdr_zero <-
-            p.adjust(pfunc(seq_len(n), 0.0), method="BH")[ table$index ]
+            p.adjust(pfunc_all_0, n=n_good, method="BH")[ table$index ]
     }
 
     new("Topconfects", list(

@@ -66,7 +66,7 @@ deseq2_confects <- function(object, ..., fdr=0.05, step=0.01) {
     # Calculate effect column, determine which genes are filtered by DESeq2
     std_result <- DESeq2::results(object, ...)
 
-    # DESeq2 may filter some genes before emitting pvalues
+   # DESeq2 may filter some genes before emitting pvalues
     filtered <- is.na(std_result$padj)
     subset_out <- which(!filtered)
     subset_n <- length(subset_out)

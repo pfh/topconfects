@@ -2,7 +2,8 @@
 title: "Confident fold change"
 author: "Paul Harrison"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+    BiocStyle::html_document
 vignette: >
     %\VignetteIndexEntry{Confident fold change}
     %\VignetteEngine{knitr::rmarkdown}
@@ -10,10 +11,6 @@ vignette: >
 params:
     cache: !r FALSE
 ---
-
-<style>
-.contents h2 { margin-top: 2em }
-</style>
 
 This document shows typical Topconfects usage with limma, edgeR, or DESeq2.
 
@@ -40,15 +37,14 @@ library(ggplot2)
 
 data(arab)
 
-# Retrieve symbol and description for each gene
+# Retrieve symbol for each gene
 info <- 
     AnnotationDbi::select(
         org.At.tair.db::org.At.tair.db, 
-        rownames(arab), c("SYMBOL","GENENAME")) %>%
+        rownames(arab), "SYMBOL") %>%
     group_by(TAIR) %>% 
     summarize(
-        SYMBOL=paste(unique(na.omit(SYMBOL)),collapse="/"), 
-        GENENAME=paste(unique(na.omit(GENENAME)),collapse="/"))
+        SYMBOL=paste(unique(na.omit(SYMBOL)),collapse="/"))
 arab_info <- 
     info[match(rownames(arab),info$TAIR),] %>% 
     select(-TAIR) %>%
@@ -68,9 +64,9 @@ y <- calcNormFactors(y)
 ```
 
 
-## limma analysis
+# limma analysis
 
-### Standard limma analysis steps
+## Standard limma analysis steps
 
 ```{r limma}
 design <- model.matrix(~Time+Treat)
@@ -81,18 +77,18 @@ fit <-
     lmFit(design)
 ```
 
-### Apply topconfects
+## Apply topconfects
 
 Find largest fold changes that we can be confident of at FDR 0.05.
 
 ```{r limma_confects}
-confects <- limma_confects(fit, coef=4, fdr=0.05)
+confects <- limma_confects(fit, coef="Treathrcc", fdr=0.05)
 
 confects
 ```
 
 
-### Looking at the result
+## Looking at the result
 
 Here the usual `logFC` values estimated by `limma` are shown as dots, with lines
 to the `confect` value.
@@ -114,7 +110,7 @@ Let's compare this to the ranking we obtain from `topTable`.
 
 ```{r, fig.height=7}
 fit_eb <- eBayes(fit)
-top <- topTable(fit_eb, coef=4, n=Inf)
+top <- topTable(fit_eb, coef="Treathrcc", n=Inf)
 
 rank_rank_plot(confects$table$name, rownames(top), "limma_confects", "topTable")
 ```
@@ -134,32 +130,32 @@ plotMD(fit, legend="bottomleft", status=paste0(
 ```
 
 
-## edgeR analysis
+# edgeR analysis
 
 An analysis in edgeR produces similar results. Note that only quasi-likelihood
 testing from edgeR is supported.
 
-### Standard edgeR analysis
+## Standard edgeR analysis
 
 ```{r edger}
 y <- estimateDisp(y, design, robust=TRUE)
 efit <- glmQLFit(y, design, robust=TRUE)
 ```
 
-### Apply topconfects
+## Apply topconfects
 
 A step of 0.05 is used here merely so that the vignette will build quickly. 
 `edger_confects` calls `edgeR::glmTreat` repeatedly, which is necessarily slow.
 In practice a smaller value such as 0.01 should be used.
 
 ```{r edger_confects}
-econfects <- edger_confects(efit, coef=4, fdr=0.05, step=0.05)
+econfects <- edger_confects(efit, coef="Treathrcc", fdr=0.05, step=0.05)
 
 econfects
 ```
 
 
-### Looking at the result
+## Looking at the result
 
 ```{r fig.height=7}
 confects_plot(econfects)
@@ -168,7 +164,7 @@ confects_plot_me(econfects)
 
 ```{r}
 etop <-
-    glmQLFTest(efit, coef=4) %>%
+    glmQLFTest(efit, coef="Treathrcc") %>%
     topTags(n=Inf)
 
 plotMD(efit, legend="bottomleft", status=paste0(
@@ -177,7 +173,7 @@ plotMD(efit, legend="bottomleft", status=paste0(
 ```
 
 
-## DESeq2 analysis
+# DESeq2 analysis
 
 DESeq2 does its own filtering of lowly expressed genes, so we start from the
 original count matrix. The initial steps are as for a normal DESeq2 analysis.
@@ -194,7 +190,7 @@ dds <- DESeqDataSetFromMatrix(
 dds <- DESeq(dds)
 ```
 
-### Apply topconfects
+## Apply topconfects
 
 The contrast or coefficient to test is specified as in the `DESeq2::results`
 function. The step of 0.05 is merely so that this vignette will build quickly, 
@@ -225,7 +221,7 @@ table(dconfects$table$filtered)
 tail(dconfects$table)
 ```
 
-### Looking at the result
+## Looking at the result
 
 Shrunk LFC estimates are shown in red.
 
@@ -250,7 +246,7 @@ ggplot(aes(
         x="confect", y="lfcShrink using ashr")
 ```
 
-## Comparing results
+# Comparing results
 
 ```{r fig.height=7}
 rank_rank_plot(confects$table$name, econfects$table$name, 

@@ -11,7 +11,10 @@ nest_confects(n, pfunc, fdr = 0.05, step = 0.001, full = FALSE)
 
 \item{pfunc}{A \code{function(indices, effect_size)} to calculate p-values.
 Indices is a subset of 1:n giving the p-values to be computed. Should
-return a numeric vector of length \code{length(indices)}.}
+return a numeric vector of length \code{length(indices)}.
+May return NA values. 
+If an NA value is returned, NA must be returned for all effect sizes. 
+NA values are not counted toward the total number of tests performed.}
 
 \item{fdr}{False Discovery Rate to control for.}
 

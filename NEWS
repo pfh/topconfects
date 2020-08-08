@@ -1,4 +1,7 @@
 
+Changes in version 1.5.2
++ nest_confects now copes with NA p-values.
+
 Changes in version 1.5.1
 + Fix limits calculation for confects_plot.
 
