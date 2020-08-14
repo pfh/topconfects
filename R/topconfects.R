@@ -7,7 +7,11 @@ setClass("Topconfects", representation("list"))
 
 setMethod("show", "Topconfects", function(object) {
     cat("$table\n")
-    print.data.frame(head(object$table, 10), right=FALSE, row.names=FALSE)
+    sub <- head(object$table, 10)
+    rownames(sub) <- sub$rank
+    sub$rank <- NULL
+    sub$index <- NULL
+    print.data.frame(sub, digits=4, right=FALSE)
     if (nrow(object$table) > 10) cat("...\n")
     cat(confects_description(object))
 })
@@ -26,6 +30,11 @@ confects_description <- function(confects) {
         sum(!is.na(confects$table$confect)),
         " of ", nrow(confects$table), " non-zero ", confects$effect_desc,
         " at FDR ", confects$fdr, "\n")
+
+    if (!is.null(confects$df_prior)) {
+        result <- paste0(result,
+            "Prior df ", sprintf("%.1f", confects$df_prior), "\n")
+    }
 
     if (!is.null(confects$edger_fit) &&
             length(confects$edger_fit$df.prior) == 1) {
@@ -92,8 +101,10 @@ confects_description <- function(confects) {
 #' @export
 confects_plot <- function(confects, n=50, limits=NULL) {
     tab <- head(confects$table, n)
-    mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
-    name_col <- first_match(c("name", "index"), names(tab))
+    mag_col <- first_match(
+        c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+    name_col <- first_match(
+        c("name", "index"), names(tab))
 
     if (identical(mag_col,"baseMean"))
         mag_scale <- "log10"
@@ -195,7 +206,8 @@ confects_plot <- function(confects, n=50, limits=NULL) {
 #' @export
 confects_plot_me <- function(confects) {
     tab <- confects$table
-    mag_col <- first_match(c("logCPM", "AveExpr", "baseMean"), names(tab))
+    mag_col <- first_match(
+        c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
 
     assert_that(!is.null(mag_col), msg="No mean expression column available.")
 

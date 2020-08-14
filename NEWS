@@ -1,4 +1,8 @@
 
+Changes in version 1.5.3
++ Small tweaks to better display weitrix_confect outputs.
++ Less digits when print()ed.
+
 Changes in version 1.5.2
 + nest_confects now copes with NA p-values.
 
