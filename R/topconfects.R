@@ -206,9 +206,13 @@ confects_plot <- function(confects, n=50, limits=NULL) {
 #' @export
 confects_plot_me <- function(confects) {
     tab <- confects$table
-    mag_col <- first_match(
-        c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
 
+    mag_col <- confects$magnitude_column
+    if (is.null(mag_col)) {
+        mag_col <- first_match(
+            c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+    }
+    
     assert_that(!is.null(mag_col), msg="No mean expression column available.")
 
     p <- ggplot(tab, aes_string(x=mag_col)) +
