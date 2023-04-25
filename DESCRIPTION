@@ -1,6 +1,6 @@
 Package: topconfects
 Title: Top Confident Effect Sizes
-Version: 1.15.0
+Version: 1.16.0
 Authors@R: person("Paul", "Harrison", email = "paul.harrison@monash.edu", role = c("aut", "cre"), comment=c(ORCID="0000-0002-3980-268X"))
 Description: Rank results by confident effect sizes, while maintaining False Discovery Rate and False Coverage-statement Rate control. Topconfects is an alternative presentation of TREAT results with improved usability, eliminating p-values and instead providing confidence bounds. The main application is differential gene expression analysis, providing genes ranked in order of confident log2 fold change, but it can be applied to any collection of effect sizes with associated standard errors.
 Depends:
