@@ -36,3 +36,5 @@ inst/doc
 /tests/testthat/*.out
 check.Renviron
 
+/doc/
+/Meta/

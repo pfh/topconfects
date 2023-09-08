@@ -229,11 +229,14 @@ confects_plot_me <- function(confects) {
     if (is.null(mag_desc)) {
         mag_desc <- mag_col
     }
-
+    
+    non_na_tab <- tab[!is.na(tab$confect),]
+    non_na_tab$color <- ifelse(non_na_tab$effect >= 0, "#cc0000", "#0000cc")
+    
     p <- ggplot(tab, aes_string(x=mag_col)) +
         geom_point(aes_string(y="effect"), color="#cccccc") +
         geom_hline(yintercept=0) +
-        geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
+        geom_point(data=non_na_tab, mapping=aes_string(y="confect"), color=non_na_tab$color) +
         labs(x=mag_desc, y=confects$effect_desc) +
         theme_bw()
 
