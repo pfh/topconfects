@@ -1,4 +1,7 @@
 
+Changes in version 1.17.1
++ Colored points in plot_confects_me().
+
 Changes in version 1.5.3
 + Small tweaks to better display weitrix_confect outputs.
 + Less digits when print()ed.

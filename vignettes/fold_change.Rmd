@@ -97,7 +97,7 @@ to the `confect` value.
 confects_plot(confects)
 ```
 
-`confects_plot_me` overlays the confects (black) on a Mean-Difference Plot
+`confects_plot_me` overlays the confects (red/blue) on a Mean-Difference Plot
 (grey) (as might be produced by `limma::plotMD`). As we should expect, the very
 noisy differences with low mean expression are removed if we look at the
 confects.

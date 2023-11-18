@@ -101,8 +101,18 @@ confects_description <- function(confects) {
 #' @export
 confects_plot <- function(confects, n=50, limits=NULL) {
     tab <- head(confects$table, n)
-    mag_col <- first_match(
-        c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+
+    mag_col <- confects$magnitude_column
+    if (is.null(mag_col)) {
+        mag_col <- first_match(
+            c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+    }
+
+    mag_desc <- confects$magnitude_desc
+    if (is.null(mag_desc)) {
+        mag_desc <- mag_col
+    }
+
     name_col <- first_match(
         c("name", "index"), names(tab))
 
@@ -151,7 +161,7 @@ confects_plot <- function(confects, n=50, limits=NULL) {
             yend="name", x="confect_from", xend="confect_to")) +
         geom_point(aes_string(size=mag_col)) +
         scale_x_continuous(expand=c(0,0), limits=limits, oob=function(a,b) a) +
-        labs(x = confects$effect_desc, y="") +
+        labs(x = confects$effect_desc, y="", size=mag_desc) +
         theme_bw()
 
     if (identical(mag_col,"baseMean"))
@@ -206,16 +216,28 @@ confects_plot <- function(confects, n=50, limits=NULL) {
 #' @export
 confects_plot_me <- function(confects) {
     tab <- confects$table
-    mag_col <- first_match(
-        c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+
+    mag_col <- confects$magnitude_column
+    if (is.null(mag_col)) {
+        mag_col <- first_match(
+            c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+    }
 
     assert_that(!is.null(mag_col), msg="No mean expression column available.")
 
+    mag_desc <- confects$magnitude_desc
+    if (is.null(mag_desc)) {
+        mag_desc <- mag_col
+    }
+    
+    non_na_tab <- tab[!is.na(tab$confect),]
+    non_na_tab$color <- ifelse(non_na_tab$effect >= 0, "#cc0000", "#0000cc")
+    
     p <- ggplot(tab, aes_string(x=mag_col)) +
         geom_point(aes_string(y="effect"), color="#cccccc") +
         geom_hline(yintercept=0) +
-        geom_point(data=tab[!is.na(tab$confect),], aes_string(y="confect")) +
-        labs(y = confects$effect_desc) +
+        geom_point(data=non_na_tab, mapping=aes_string(y="confect"), color=non_na_tab$color) +
+        labs(x=mag_desc, y=confects$effect_desc) +
         theme_bw()
 
     if (identical(mag_col,"baseMean"))
