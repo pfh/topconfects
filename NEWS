@@ -1,4 +1,7 @@
 
+Changes in version 1.19.2
++ Add plot_confects_me2().
+
 Changes in version 1.17.1
 + Colored points in plot_confects_me().
 

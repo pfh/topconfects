@@ -31,7 +31,7 @@ Suggests:
 License: LGPL-2.1 | file LICENSE
 URL: https://github.com/pfh/topconfects
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 BugReports: https://github.com/pfh/topconfects/issues
 biocViews: GeneExpression, DifferentialExpression, Transcriptomics, RNASeq, mRNAMicroarray, Regression, MultipleComparison

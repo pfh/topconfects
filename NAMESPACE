@@ -2,6 +2,7 @@
 
 export(confects_plot)
 export(confects_plot_me)
+export(confects_plot_me2)
 export(deseq2_confects)
 export(edger_confects)
 export(limma_confects)
