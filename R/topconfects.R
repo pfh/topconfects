@@ -304,7 +304,7 @@ confects_plot_me2 <- function(confects, breaks=NULL) {
     
     mag_col <- confects$magnitude_column
     if (is.null(mag_col)) {
-        mag_col <- topconfects:::first_match(
+        mag_col <- first_match(
             c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
     }
     
@@ -340,7 +340,7 @@ confects_plot_me2 <- function(confects, breaks=NULL) {
     levels(tab$color) <- paste0("> ", levels(tab$color))
     
     # Reverse order
-    tab <- purrr::map_df(tab, rev)
+    tab <- tab[rev(seq_len(nrow(tab))),,drop = FALSE]
     
     p <- ggplot(tab, aes_string(x=mag_col, y="effect", color="color")) +
         geom_hline(yintercept=0) +
