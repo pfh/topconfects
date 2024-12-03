@@ -112,29 +112,29 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     if (is.null(mag_desc)) {
         mag_desc <- mag_col
     }
-
+    
     name_col <- first_match(
         c("name", "index"), names(tab))
-
+    
     if (identical(mag_col,"baseMean"))
         mag_scale <- "log10"
     else
         mag_scale <- "identity"
-
+    
     if (is.null(limits))
         limits <- confects$limits
     
     if (is.null(limits))
         limits <- c(NA,NA)
-
+    
     min_effect <- min(0, tab$effect, na.rm=TRUE)
     max_effect <- max(0, tab$effect, na.rm=TRUE)
-
+    
     if (min_effect == max_effect) {
         min_effect <- -1
         max_effect <- 1
     }
-
+    
     if (is.na(limits[1]) & is.na(limits[2])) {
         max_abs_effect <- max(-min_effect,max_effect)
         limits <- c(-max_abs_effect*1.05, max_abs_effect*1.05)
@@ -170,17 +170,21 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     p
 }
 
-#' Mean-expression vs effect size plot
+#' Mean-expression vs effect size plot (deprecated)
 #'
+#' Note: I now recommend using \code{plot_confects_me2} instead of this plot. 
 #' Like plotMD in limma, plots effect size against mean expression level.
 #' However shows "confect" on the y axis rather than "effect" ("effect" is shown
 #' underneath in grey). This may be useful for assessing whether effects are
-#' only being detected only in highly expressed genes.
+#' only being detected in highly expressed genes.
 #'
 #' @param confects A "Topconfects" class object, as returned from
 #'   \code{limma_confects}, \code{edger_confects}, or \code{deseq2_confects}.
 #'
 #' @return
+#'
+#' The two types of points in this plot make it quite confusing to explain.
+#' \code{plot_confects_me2} is recommended instead.
 #'
 #' A ggplot2 object. Working non-interactively, you must print() this for it to
 #' be displayed.
@@ -245,6 +249,119 @@ confects_plot_me <- function(confects) {
 
     p
 }
+
+
+
+#' Mean-expression vs effect size plot (version 2)
+#'
+#' Like plotMD in limma, plots effect size against mean expression level.
+#' Confect values are indicated using color.
+#' This may be useful for assessing whether effects are
+#' only being detected in highly expressed genes.
+#'
+#' @param confects A "Topconfects" class object, as returned from
+#'   \code{limma_confects}, \code{edger_confects}, or \code{deseq2_confects}.
+#'
+#' @param breaks A vector of confect thresholds to color points with.
+#'   Chooses a sensible set of breaks if none are given.
+#'
+#' @return
+#'
+#' A ggplot2 object. Working non-interactively, you must print() this for it to
+#' be displayed.
+#'
+#' @examples
+#'
+#' library(NBPSeq)
+#' library(edgeR)
+#' library(limma)
+#'
+#' data(arab)
+#'
+#' # Extract experimental design from sample names
+#' treat <- factor(substring(colnames(arab),1,4), levels=c("mock","hrcc"))
+#' time <- factor(substring(colnames(arab),5,5))
+#'
+#' # Keep genes with at least 3 samples having an RPM of more than 2
+#' y <- DGEList(arab)
+#' keep <- rowSums(cpm(y)>2) >= 3
+#' y <- y[keep,,keep.lib.sizes=FALSE]
+#' y <- calcNormFactors(y)
+#'
+#' # Find top confident fold changes by topconfects-limma-voom method
+#' design <- model.matrix(~time+treat)
+#' voomed <- voom(y, design)
+#' fit <- lmFit(voomed, design)
+#' confects <- limma_confects(fit, "treathrcc")
+#'
+#' # Plot confident effect size against mean expression
+#' # (estimated effect size also shown as grey dots)
+#' confects_plot_me2(confects)
+#'
+#' @export
+confects_plot_me2 <- function(confects, breaks=NULL) {
+    tab <- confects$table
+    
+    mag_col <- confects$magnitude_column
+    if (is.null(mag_col)) {
+        mag_col <- first_match(
+            c("logCPM", "AveExpr", "row_mean", "baseMean"), names(tab))
+    }
+    
+    assert_that(!is.null(mag_col), msg="No mean expression column available.")
+    
+    mag_desc <- confects$magnitude_desc
+    if (is.null(mag_desc)) {
+        mag_desc <- mag_col
+    }
+    
+    # Provide sensible breaks if not given
+    if (length(breaks) == 0) {
+        breaks <- 0.0
+        max_confect <- max(0.0, abs(tab$confect), na.rm=TRUE)
+        big_step <- 0.1
+        repeat {
+            step <- big_step
+            if (step*4 >= max_confect) break
+            step <- big_step*2
+            if (step*4 >= max_confect) break
+            step <- big_step*5
+            if (step*4 >= max_confect) break
+            big_step <- big_step*10
+        }
+        breaks <- seq(0, max_confect, by=step)
+    }
+    
+    tab$color <- rep(NA, nrow(tab))
+    for(item in sort(breaks)) {
+        tab$color[ !is.na(tab$confect) & abs(tab$confect) >= item ] <- item
+    }
+    tab$color <- factor(tab$color, rev(breaks))
+    levels(tab$color) <- paste0("> ", levels(tab$color))
+    
+    # Reverse order
+    tab <- tab[rev(seq_len(nrow(tab))),,drop = FALSE]
+    
+    p <- ggplot(tab, aes_string(x=mag_col, y="effect", color="color")) +
+        geom_hline(yintercept=0) +
+        geom_point(show.legend=TRUE) +
+        scale_color_discrete(
+            breaks=levels(tab$color),
+            na.value="#bbbbbb",
+            h=c(180,380), direction=-1, drop=FALSE) +
+        guides(color=guide_legend(override.aes=list(size=4))) +
+        labs(
+            x=mag_desc, 
+            y=confects$effect_desc,
+            color=paste0("|",confects$effect_desc,"|\n\nconfidently")) +
+        theme_bw()
+    
+    if (identical(mag_col,"baseMean"))
+        p <- p + scale_x_continuous(trans="log10")
+    
+    p
+}
+
 
 
 #' A plot to compare two rankings

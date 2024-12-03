@@ -79,8 +79,15 @@ Use `confects_plot` to plot confident effect sizes of top genes. The estimated
 effect size (eg log fold change) is shown as a dot, and the confidence bound is
 shown as a line.
 
-Use `confects_plot_me` to gain a global overview. Similar to an MD or MA plot,
-the x axis is average expression. The y axis is effect size. Estimated effect
+Use `confects_plot_me2` to gain a global overview. Similar to an MD or MA plot,
+the x axis is average expression and the y axis is estimated effect size. The 
+confident effect size is shown using colors. Effect sizes confidently "> 0"
+correspond to traditional differential expression testing, and effect sizes
+confidently greater than larger values correspond to the TREAT test at that
+threshold.
+
+There is also an older `confects_plot_me`, which I no longer recommend as it is
+hard to explain and easily misleading. The y axis is effect size. Estimated effect
 sizes are shown in grey and confident effect sizes in red or blue (ie a gene with a
 non-NA confident effect size is shown with both a grey and a colored dot).
 
