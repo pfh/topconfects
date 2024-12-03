@@ -112,29 +112,29 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     if (is.null(mag_desc)) {
         mag_desc <- mag_col
     }
-
+    
     name_col <- first_match(
         c("name", "index"), names(tab))
-
+    
     if (identical(mag_col,"baseMean"))
         mag_scale <- "log10"
     else
         mag_scale <- "identity"
-
+    
     if (is.null(limits))
         limits <- confects$limits
     
     if (is.null(limits))
         limits <- c(NA,NA)
-
+    
     min_effect <- min(0, tab$effect, na.rm=TRUE)
     max_effect <- max(0, tab$effect, na.rm=TRUE)
-
+    
     if (min_effect == max_effect) {
         min_effect <- -1
         max_effect <- 1
     }
-
+    
     if (is.na(limits[1]) & is.na(limits[2])) {
         max_abs_effect <- max(-min_effect,max_effect)
         limits <- c(-max_abs_effect*1.05, max_abs_effect*1.05)

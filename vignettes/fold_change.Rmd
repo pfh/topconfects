@@ -68,6 +68,8 @@ y <- calcNormFactors(y)
 
 ## Standard limma analysis steps
 
+We use the voom-limma method.
+
 ```{r limma}
 design <- model.matrix(~Time+Treat)
 design[,]
@@ -87,6 +89,8 @@ confects <- limma_confects(fit, coef="Treathrcc", fdr=0.05)
 confects
 ```
 
+Note: If not using `voom` or a similar precision weighting method, it may be important to use `limma_confects(..., trend=TRUE)` to account for a mean-variance trend, similar to how you would call `limma::treat(..., trend=TRUE)`. You can check the need for this with `limma::plotSA(fit)`.
+
 
 ## Looking at the result
 
@@ -97,13 +101,27 @@ to the `confect` value.
 confects_plot(confects)
 ```
 
-`confects_plot_me` overlays the confects (red/blue) on a Mean-Difference Plot
-(grey) (as might be produced by `limma::plotMD`). As we should expect, the very
-noisy differences with low mean expression are removed if we look at the
-confects.
+`confects_plot_me2` produces a Mean-Difference Plot (as might be produced by `limma::plotMD`),
+and colors points based on thresholds for the `confect` values.
+Effect sizes confidently "> 0" correspond to traditional differential expression testing, 
+and effect sizes confidently greater than larger values correspond to the TREAT test at that
+threshold.
+I have specified the `breaks` here explicitly, 
+to aid comparison with other methods in similar plots below.
 
 ```{r}
-confects_plot_me(confects)
+confects_plot_me2(confects, breaks=c(0,1,2,3))
+```
+
+You can see that while large estimated effect sizes are produced at low expression levels, 
+this is mostly due to noise in the estimates. They are not *confidently* large expression levels.
+
+There is also a `confects_plot_me`, which I no longer recommend. 
+This overlays the confects (red/blue) on a Mean-Difference Plot (grey). 
+This proved to be confusing, as significant gene are represented by two different points.
+
+```{r}
+confects_plot_me(confects) + labs(title="This plot is not recommended")
 ```
 
 Let's compare this to the ranking we obtain from `topTable`.
@@ -159,7 +177,7 @@ econfects
 
 ```{r fig.height=7}
 confects_plot(econfects)
-confects_plot_me(econfects)
+confects_plot_me2(econfects, breaks=c(0,1,2,3))
 ```
 
 ```{r}
@@ -247,6 +265,8 @@ ggplot(aes(
 ```
 
 # Comparing results
+
+The `rank_rank_plot` function can be used to pick differences between the different methods. It seems edgeR and DESeq2 tend to promote some genes, relative to limma. edgeR and DESeq2 are more similar to each other, which is reassuring given that they are based on similar statistical models.
 
 ```{r fig.height=7}
 rank_rank_plot(confects$table$name, econfects$table$name, 
