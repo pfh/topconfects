@@ -62,6 +62,52 @@ confects_description <- function(confects) {
 }
 
 
+# Helper function for plots
+get_limits <- function(tab, limits, expansion=1) {
+    if (is.null(limits))
+        limits <- c(NA,NA)
+    
+    min_effect <- min(0, tab$effect, na.rm=TRUE)
+    max_effect <- max(0, tab$effect, na.rm=TRUE)
+    
+    if (min_effect == max_effect) {
+        min_effect <- -1
+        max_effect <- 1
+    }
+    
+    if (is.na(limits[1]) & is.na(limits[2])) {
+        max_abs_effect <- max(-min_effect,max_effect)
+        limits <- c(-max_abs_effect*expansion, max_abs_effect*expansion)
+    } else if (is.na(limits[1])) {
+        limits[1] <- min_effect * expansion
+    } else if (is.na(limits[2])) {
+        limits[2] <- max_effect * expansion
+    }
+    
+    assert_that(is.numeric(limits), length(limits) == 2)
+    
+    limits
+}
+
+# Red colors
+get_reds <- function(n_breaks) {
+    reds <- c(
+        "#fcae91",
+        "#fb6a4a",
+        "#de2d26",
+        "#a50f15")
+    tail(colorRampPalette(reds)(max(2,n_breaks)),n_breaks)
+}
+
+# Blue colors
+get_blues <- function(n_breaks) {
+    blues <- c(
+        "#6baed6",
+        "#3182bd",
+        "#08519c",
+        "#08306b")
+    tail(colorRampPalette(blues)(max(2,n_breaks)),n_breaks)
+}
 
 
 #' Top confident effect sizes plot
@@ -123,29 +169,8 @@ confects_plot <- function(confects, n=50, limits=NULL) {
     
     if (is.null(limits))
         limits <- confects$limits
+    limits <- get_limits(tab, limits, 1.05)
     
-    if (is.null(limits))
-        limits <- c(NA,NA)
-    
-    min_effect <- min(0, tab$effect, na.rm=TRUE)
-    max_effect <- max(0, tab$effect, na.rm=TRUE)
-    
-    if (min_effect == max_effect) {
-        min_effect <- -1
-        max_effect <- 1
-    }
-    
-    if (is.na(limits[1]) & is.na(limits[2])) {
-        max_abs_effect <- max(-min_effect,max_effect)
-        limits <- c(-max_abs_effect*1.05, max_abs_effect*1.05)
-    } else if (is.na(limits[1])) {
-        limits[1] <- min_effect * 1.05
-    } else if (is.na(limits[2])) {
-        limits[2] <- max_effect * 1.05
-    }   
-
-    assert_that(is.numeric(limits), length(limits) == 2)
-
     tab$confect_from <- limits[1]
     tab$confect_to <- limits[2]
     positive <- !is.na(tab$confect) & tab$effect > 0
@@ -262,8 +287,11 @@ confects_plot_me <- function(confects) {
 #' @param confects A "Topconfects" class object, as returned from
 #'   \code{limma_confects}, \code{edger_confects}, or \code{deseq2_confects}.
 #'
-#' @param breaks A vector of confect thresholds to color points with.
+#' @param breaks A vector of non-negative confect thresholds to color points with.
 #'   Chooses a sensible set of breaks if none are given.
+#'
+#' @param signed_colors Should positive and negative confects be colored 
+#'   distinctly, red and blue.
 #'
 #' @return
 #'
@@ -299,7 +327,7 @@ confects_plot_me <- function(confects) {
 #' confects_plot_me2(confects)
 #'
 #' @export
-confects_plot_me2 <- function(confects, breaks=NULL) {
+confects_plot_me2 <- function(confects, breaks=NULL, signed_colors=TRUE) {
     tab <- confects$table
     
     mag_col <- confects$magnitude_column
@@ -314,6 +342,10 @@ confects_plot_me2 <- function(confects, breaks=NULL) {
     if (is.null(mag_desc)) {
         mag_desc <- mag_col
     }
+    
+    y_limits <- get_limits(tab, confects$limits, 1)
+    
+    is_unsigned <- y_limits[1] >= 0
     
     # Provide sensible breaks if not given
     if (length(breaks) == 0) {
@@ -332,29 +364,59 @@ confects_plot_me2 <- function(confects, breaks=NULL) {
         breaks <- seq(0, max_confect, by=step)
     }
     
-    tab$color <- rep(NA, nrow(tab))
-    for(item in sort(breaks)) {
-        tab$color[ !is.na(tab$confect) & abs(tab$confect) >= item ] <- item
+    assert_that(all(breaks >= 0), msg="Breaks should be non-negative.")
+    
+    n_breaks <- length(breaks)
+    breaks <- sort(unique(breaks))
+    if (signed_colors) {
+        pos_label <- paste0("> ", breaks)
+        neg_label <- paste0("< ", -breaks)
+        tab$color <- rep(NA_character_, nrow(tab))
+        for(i in seq_len(n_breaks)) {
+            tab$color[ !is.na(tab$confect) & tab$effect > 0 & abs(tab$confect) >= breaks[i] ] <- pos_label[i]
+            if (!is_unsigned) 
+                tab$color[ !is.na(tab$confect) & tab$effect < 0 & abs(tab$confect) >= breaks[i] ] <- neg_label[i]
+        }
+        tab$color <- factor(tab$color, c(rev(pos_label), if (!is_unsigned) neg_label))
+        
+        colors <- c(
+            rev(get_reds(n_breaks)),
+            if (!is_unsigned) get_blues(n_breaks))
+        
+        color_label <- paste0(confects$effect_desc,"\nconfidently")
+    } else {
+        tab$color <- rep(NA_character_, nrow(tab))
+        label <- paste0("> ", breaks)
+        for(i in seq_len(n_breaks)) {
+            tab$color[ !is.na(tab$confect) & abs(tab$confect) >= breaks[i] ] <- label[i]
+        }
+        tab$color <- factor(tab$color, rev(label))
+        colors <- scales::pal_hue(h=c(180,380),direction=-1)(n_breaks)
+        if (is_unsigned)
+            color_label <- paste0(confects$effect_desc,"\nconfidently")
+        else
+            color_label <- paste0("|",confects$effect_desc,"|\nconfidently")
     }
-    tab$color <- factor(tab$color, rev(breaks))
-    levels(tab$color) <- paste0("> ", levels(tab$color))
     
     # Reverse order
     tab <- tab[rev(seq_len(nrow(tab))),,drop = FALSE]
     
     p <- ggplot(tab, aes_string(x=mag_col, y="effect", color="color")) +
-        geom_hline(yintercept=0) +
         geom_point(show.legend=TRUE) +
-        scale_color_discrete(
+        scale_color_manual(
             breaks=levels(tab$color),
-            na.value="#bbbbbb",
-            h=c(180,380), direction=-1, drop=FALSE) +
+            values=colors,
+            na.value="#dcdcdc", 
+            drop=FALSE) +
         guides(color=guide_legend(override.aes=list(size=4))) +
         labs(
             x=mag_desc, 
             y=confects$effect_desc,
-            color=paste0("|",confects$effect_desc,"|\n\nconfidently")) +
-        theme_bw()
+            color=color_label) +
+        geom_hline(yintercept=0) +
+        coord_cartesian(ylim=y_limits) +
+        theme_bw() +
+        theme(legend.key.size = unit(1, 'lines'))
     
     if (identical(mag_col,"baseMean"))
         p <- p + scale_x_continuous(trans="log10")

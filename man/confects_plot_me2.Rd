@@ -4,14 +4,17 @@
 \alias{confects_plot_me2}
 \title{Mean-expression vs effect size plot (version 2)}
 \usage{
-confects_plot_me2(confects, breaks = NULL)
+confects_plot_me2(confects, breaks = NULL, signed_colors = TRUE)
 }
 \arguments{
 \item{confects}{A "Topconfects" class object, as returned from
 \code{limma_confects}, \code{edger_confects}, or \code{deseq2_confects}.}
 
-\item{breaks}{A vector of confect thresholds to color points with.
+\item{breaks}{A vector of non-negative confect thresholds to color points with.
 Chooses a sensible set of breaks if none are given.}
+
+\item{signed_colors}{Should positive and negative confects be colored 
+distinctly, red and blue.}
 }
 \value{
 A ggplot2 object. Working non-interactively, you must print() this for it to

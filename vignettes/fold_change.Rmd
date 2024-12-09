@@ -110,7 +110,7 @@ I have specified the `breaks` here explicitly,
 to aid comparison with other methods in similar plots below.
 
 ```{r}
-confects_plot_me2(confects, breaks=c(0,1,2,3))
+confects_plot_me2(confects, breaks=c(0,1,2))
 ```
 
 You can see that while large estimated effect sizes are produced at low expression levels, 
@@ -177,7 +177,7 @@ econfects
 
 ```{r fig.height=7}
 confects_plot(econfects)
-confects_plot_me2(econfects, breaks=c(0,1,2,3))
+confects_plot_me2(econfects, breaks=c(0,1,2))
 ```
 
 ```{r}
